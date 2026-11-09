@@ -29,9 +29,9 @@ favicon: /images/avatar.png
 # 背景：浅色渐变（页面主体底色）
 background: "linear-gradient(135deg, #eef2ff 0%, #faf5ff 50%, #f0fdfa 100%)"
 
-# 顶部横幅图：深色夜景，已压缩到 65KB
-index_img: /img/default.jpg
-default_top_img: /img/default.jpg
+# 顶部横幅图：深海大肥鱼（SVG，矢量不糊、体积小）
+index_img: /img/fish-banner.svg
+default_top_img: /img/fish-banner.svg
 
 # 社交链接
 social:
