@@ -46,3 +46,49 @@ utterances:
   repo: KeivenJian/Keiven-simple-blog
   issue_term: pathname # 按路径匹配，换域名不丢评论
   theme: github-light
+
+# ---------------------------------------------------------------
+# 外观与功能
+# ---------------------------------------------------------------
+
+# 头像（本地托管，不依赖外链）
+avatar:
+  url: /images/avatar.png
+  rounded: true
+  rotated: true
+
+# 社交链接
+social:
+  GitHub: https://github.com/KeivenJian || fab fa-github
+
+social_icons:
+  enable: true
+  icons_only: false
+  transition: true
+
+# 顶部滚动阅读进度条
+reading_progress:
+  enable: true
+  color: "#37c6c0"
+
+# 代码块：深浅色主题 + 复制按钮
+codeblock:
+  theme:
+    light: default
+    dark: stackoverflow-dark
+  copy_button:
+    enable: true
+
+# 本地搜索
+local_search:
+  enable: true
+
+# 字数统计（依赖 hexo-word-counter）
+symbols_count_time:
+  separated_meta: true
+  item_text_total: true
+
+# 页面切换动效
+motion:
+  enable: true
+
