@@ -12,6 +12,8 @@
     "version": "7.3.0"
   },
   "dependencies": {
+    "@egjs/infinitegrid": "^4.13.1",
+    "@fortawesome/fontawesome-free": "^7.3.1",
     "hexo": "^7.0.0",
     "hexo-generator-archive": "^2.0.0",
     "hexo-generator-category": "^2.0.0",
