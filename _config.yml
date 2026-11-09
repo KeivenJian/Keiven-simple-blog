@@ -96,7 +96,7 @@ ignore:
 # Extensions
 ## Plugins: https://hexo.io/plugins/
 ## Themes: https://hexo.io/themes/
-theme: fluid
+theme: butterfly
 
 # Deployment
 ## Docs: https://hexo.io/docs/one-command-deployment
@@ -105,7 +105,7 @@ deploy:
 
 # 本地搜索（hexo-generator-searchdb）
 search:
-  path: local-search.xml
+  path: search.xml
   field: post
   content: true
   format: html
