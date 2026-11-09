@@ -88,23 +88,24 @@ utterances:
   dark_theme: photon-dark
 
 # ---------------------------------------------------------------
-# 页面注入：右下角深海女仆桌宠（点击说话，自动上浮动画）
+# 页面注入：右下角深海女仆桌宠（可拖动，位置会记住）
 # ---------------------------------------------------------------
 inject:
   bottom:
     - |
       <div id="pet-wrap" aria-label="深海女仆桌宠">
         <div id="pet-bubble"></div>
-        <img id="pet-img" src="/img/maid-pet.webp" alt="深海女仆桌宠">
+        <img id="pet-img" src="/img/maid-pet.webp" alt="深海女仆桌宠" draggable="false">
       </div>
       <style>
-      #pet-wrap{position:fixed;right:18px;bottom:0;z-index:9990;width:170px;cursor:pointer;user-select:none;transition:transform .25s ease;}
+      #pet-wrap{position:fixed;right:18px;bottom:0;z-index:9990;width:170px;cursor:grab;user-select:none;touch-action:none;transition:transform .25s ease;}
+      #pet-wrap.dragging{transition:none;cursor:grabbing;transform:none;}
       #pet-wrap:hover{transform:scale(1.04) translateY(-4px);}
-      #pet-img{width:100%;display:block;filter:drop-shadow(0 10px 22px rgba(10,20,50,.45));animation:petFloat 3.8s ease-in-out infinite;}
+      #pet-img{width:100%;display:block;pointer-events:none;filter:drop-shadow(0 10px 22px rgba(10,20,50,.45));animation:petFloat 3.8s ease-in-out infinite;}
       @keyframes petFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
-      #pet-bubble{position:absolute;right:100%;bottom:58%;margin-right:12px;background:#fff;color:#1f2a44;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.5;max-width:210px;box-shadow:0 8px 24px rgba(10,20,50,.18);opacity:0;transform:translateX(8px);transition:.3s ease;pointer-events:none;}
-      #pet-bubble::after{content:"";position:absolute;left:100%;top:16px;border:7px solid transparent;border-left-color:#fff;}
-      #pet-bubble.show{opacity:1;transform:translateX(0);}
+      #pet-bubble{position:absolute;left:50%;bottom:100%;margin-bottom:10px;transform:translateX(-50%) translateY(6px);background:#fff;color:#1f2a44;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.5;max-width:210px;width:max-content;box-shadow:0 8px 24px rgba(10,20,50,.18);opacity:0;transition:.3s ease;pointer-events:none;}
+      #pet-bubble::after{content:"";position:absolute;left:50%;top:100%;transform:translateX(-50%);border:7px solid transparent;border-top-color:#fff;}
+      #pet-bubble.show{opacity:1;transform:translateX(-50%) translateY(0);}
       @media(max-width:768px){#pet-wrap{width:110px;right:6px;}#pet-bubble{max-width:150px;font-size:12px;}}
       </style>
       <script>
@@ -114,7 +115,62 @@ inject:
         var lines=['欢迎来到 Keiven 的博客～','今天也在偷偷吃 token 哦','点我干嘛，快去读文章啦','这篇写得不错吧？','有问题就喊本鱼～','深海女仆工坊，为您服务'];
         var timer=null;
         function say(){bubble.textContent=lines[Math.floor(Math.random()*lines.length)];bubble.classList.add('show');clearTimeout(timer);timer=setTimeout(function(){bubble.classList.remove('show');},3600);}
-        pet.addEventListener('click',say);
+        function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
+
+        // 恢复上次位置
+        try{
+          var saved=JSON.parse(localStorage.getItem('pet-pos')||'null');
+          if(saved && typeof saved.left==='number' && typeof saved.top==='number'){
+            pet.style.right='auto';pet.style.bottom='auto';
+            pet.style.left=clamp(saved.left,0,window.innerWidth-pet.offsetWidth)+'px';
+            pet.style.top=clamp(saved.top,0,window.innerHeight-pet.offsetHeight)+'px';
+          }
+        }catch(err){}
+
+        var dragging=false,moved=false,startX=0,startY=0,startLeft=0,startTop=0;
+
+        pet.addEventListener('pointerdown',function(e){
+          if(e.button!==undefined && e.button!==0)return;
+          dragging=true;moved=false;
+          startX=e.clientX;startY=e.clientY;
+          var r=pet.getBoundingClientRect();
+          startLeft=r.left;startTop=r.top;
+          pet.style.right='auto';pet.style.bottom='auto';
+          pet.style.left=startLeft+'px';pet.style.top=startTop+'px';
+          pet.classList.add('dragging');
+          try{pet.setPointerCapture(e.pointerId);}catch(err){}
+          e.preventDefault();
+        });
+
+        pet.addEventListener('pointermove',function(e){
+          if(!dragging)return;
+          var dx=e.clientX-startX,dy=e.clientY-startY;
+          if(Math.abs(dx)>4||Math.abs(dy)>4)moved=true;
+          var left=clamp(startLeft+dx,0,window.innerWidth-pet.offsetWidth);
+          var top=clamp(startTop+dy,0,window.innerHeight-pet.offsetHeight);
+          pet.style.left=left+'px';pet.style.top=top+'px';
+          e.preventDefault();
+        });
+
+        function endDrag(e){
+          if(!dragging)return;
+          dragging=false;
+          pet.classList.remove('dragging');
+          var r=pet.getBoundingClientRect();
+          try{localStorage.setItem('pet-pos',JSON.stringify({left:r.left,top:r.top}));}catch(err){}
+          if(!moved)say();
+        }
+        pet.addEventListener('pointerup',endDrag);
+        pet.addEventListener('pointercancel',endDrag);
+
+        // 窗口尺寸变化时保持可见
+        window.addEventListener('resize',function(){
+          var r=pet.getBoundingClientRect();
+          pet.style.right='auto';pet.style.bottom='auto';
+          pet.style.left=clamp(r.left,0,window.innerWidth-pet.offsetWidth)+'px';
+          pet.style.top=clamp(r.top,0,window.innerHeight-pet.offsetHeight)+'px';
+        });
+
         setTimeout(say,2200);
       })();
       </script>
