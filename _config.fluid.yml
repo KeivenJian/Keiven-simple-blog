@@ -1,0 +1,66 @@
+# ---------------------------------------------------------------
+# Fluid 主题覆盖配置
+# 完整项见 node_modules/hexo-theme-fluid/_config.yml
+# 官方文档：https://hexo.fluid-dev.com/docs/
+# ---------------------------------------------------------------
+
+# 导航栏
+navbar:
+  blog_title: "Keiven Blog"
+  menu:
+    - { key: "home", link: "/", icon: "iconfont icon-home-fill" }
+    - { key: "archive", link: "/archives/", icon: "iconfont icon-archive-fill" }
+    - { key: "category", link: "/categories/", icon: "iconfont icon-category-fill" }
+    - { key: "tag", link: "/tags/", icon: "iconfont icon-tags-fill" }
+    - { key: "about", link: "/about/", icon: "iconfont icon-user-fill" }
+
+# 站点图标
+favicon: /images/avatar.png
+
+# 搜索（依赖 hexo-generator-search）
+search:
+  enable: true
+  path: /local-search.xml
+  generate_path: /local-search.xml
+  field: post
+  content: true
+
+# 首页
+index:
+  banner_img: /img/default.png
+  banner_img_height: 100
+  slogan:
+    enable: true
+    # 留空则显示站点 subtitle（记录与思考）
+    text:
+
+# 页脚
+footer:
+  content: '
+    <span>Keiven Blog</span>
+    <i class="iconfont icon-love"></i>
+    Powered by
+    <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a>
+    &
+    <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
+  '
+
+# 文章页
+post:
+  comments:
+    enable: true
+    type: utterances
+  wordcount:
+    enable: true
+  min2read:
+    enable: true
+    awl: 2
+    wpm: 300
+
+# 评论：Utterances（数据存在 GitHub Issues）
+utterances:
+  repo: KeivenJian/Keiven-simple-blog
+  issue_term: pathname
+  label: utterances
+  theme: github-light
+  theme_dark: github-dark
