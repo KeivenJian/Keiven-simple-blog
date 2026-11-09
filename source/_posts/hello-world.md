@@ -1,38 +1,36 @@
 ---
-title: Hello World
+title: 你好，世界
+date: 2026-11-09 17:45:00
+tags:
+  - 随笔
+categories:
+  - 站务
 ---
-Welcome to [Hexo](https://hexo.io/)! This is your very first post. Check [documentation](https://hexo.io/docs/) for more info. If you get any problems when using Hexo, you can find the answer in [troubleshooting](https://hexo.io/docs/troubleshooting.html) or you can ask me on [GitHub](https://github.com/hexojs/hexo/issues).
 
-## Quick Start
+博客开张了。
 
-### Create a new post
+## 为什么要有这个站
 
-``` bash
-$ hexo new "My New Post"
-```
+把零散的想法、踩过的坑、读过的东西放下来。比起散落在各个平台的碎片，一个自己的地方至少有三件事是确定的：**内容归自己、排版归自己、十年后链接还在。**
 
-More info: [Writing](https://hexo.io/docs/writing.html)
+## 它是怎么搭起来的
 
-### Run server
+整套东西都是静态的，没有服务器要养：
 
-``` bash
-$ hexo server
-```
+| 部分 | 选型 |
+| --- | --- |
+| 生成器 | [Hexo](https://hexo.io/) |
+| 主题 | [Fluid](https://github.com/fluid-dev/hexo-theme-fluid) |
+| 托管 | GitHub Pages |
+| 评论 | Utterances（数据存在 GitHub Issues） |
+| 域名 | keivenblog.me |
 
-More info: [Server](https://hexo.io/docs/server.html)
+写作就是写 Markdown，推送到仓库之后自动构建发布，中间不用碰服务器。
 
-### Generate static files
+## 以后会写什么
 
-``` bash
-$ hexo generate
-```
+技术笔记、阅读记录，以及一些暂时没想清楚、先写下来再说的话题。不会为了更新而更新。
 
-More info: [Generating](https://hexo.io/docs/generating.html)
+## 最后
 
-### Deploy to remote sites
-
-``` bash
-$ hexo deploy
-```
-
-More info: [Deployment](https://hexo.io/docs/one-command-deployment.html)
+评论用 GitHub 账号登录就能写。欢迎来坐坐。
