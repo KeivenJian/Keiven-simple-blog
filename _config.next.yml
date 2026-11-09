@@ -1,0 +1,48 @@
+# ---------------------------------------------------------------
+# NexT 主题覆盖配置
+# 只写需要改的项，其余继承 node_modules/hexo-theme-next/_config.yml
+# 官方文档：https://theme-next.js.org/docs/
+# ---------------------------------------------------------------
+
+# 布局方案：Muse | Mist | Pisces | Gemini
+scheme: Gemini
+
+# 顶部菜单
+menu:
+  home: / || fa fa-home
+  archives: /archives/ || fa fa-archive
+  tags: /tags/ || fa fa-tags
+  categories: /categories/ || fa fa-layer-group
+  about: /about/ || fa fa-user
+
+menu_settings:
+  icons: true
+  badges: false
+
+# 侧栏
+sidebar:
+  position: left
+
+# 页脚
+footer:
+  since: 2026
+  icon:
+    name: Keiven
+    animated: true
+    color: "#ff6b6b"
+
+# ---------------------------------------------------------------
+# 评论系统：Utterances（数据存在 GitHub Issues）
+# 使用前必须：
+#   1. 仓库设为 public
+#   2. 给仓库安装 https://github.com/apps/utterances
+#   3. 把下面的 repo 改成 "你的GitHub用户名/仓库名"
+# ---------------------------------------------------------------
+comments:
+  active: utterances
+
+utterances:
+  enable: true
+  repo: KeivenJian/Keiven-simple-blog
+  issue_term: pathname # 按路径匹配，换域名不丢评论
+  theme: github-light
