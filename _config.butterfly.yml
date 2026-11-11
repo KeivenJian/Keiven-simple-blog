@@ -184,29 +184,21 @@ inject:
       })();
       </script>
     - |
-      <div id="lang-switch" role="group" aria-label="语言切换">
-        <button type="button" data-lang="zh" class="active">简</button>
-        <button type="button" data-lang="tw">繁</button>
-        <button type="button" data-lang="en">EN</button>
-      </div>
       <style>
-      #lang-switch{position:fixed;left:16px;bottom:16px;z-index:9991;display:flex;gap:4px;background:rgba(255,255,255,.94);border-radius:999px;padding:5px;box-shadow:0 6px 18px rgba(10,20,50,.2);}
-      #lang-switch button{border:0;background:transparent;padding:5px 11px;border-radius:999px;font-size:12px;font-weight:600;cursor:pointer;color:#334155;transition:.2s;}
-      #lang-switch button:hover{background:rgba(77,107,254,.12);}
-      #lang-switch button.active{background:#4d6bfe;color:#fff;}
       #translateLink{display:none !important;}
-      @media(max-width:768px){#lang-switch{left:8px;bottom:8px;}}
+      #rightside .lang-btn{font-size:12px;font-weight:700;}
+      #rightside .lang-btn.active{color:#4d6bfe;}
       </style>
       <script>
       (function(){
-        var box=document.getElementById('lang-switch');
-        if(!box)return;
+        function init(){
         var EN={'首页':'Home','归档':'Archives','分类':'Categories','标签':'Tags','关于':'About','搜索':'Search'};
         var originals=[];
         var state='zh';
+        var buttons=[];
 
         function isTw(){
-          var m=document.cookie.match(/translate-chn-cht=(\\d)/);
+          var m=document.cookie.match(/translate-chn-cht=(\d)/);
           return m && Number(m[1])===1;
         }
         function toggleTw(){
@@ -235,7 +227,7 @@ inject:
           if(ph && ph.dataset.zhPh){ph.placeholder=ph.dataset.zhPh;delete ph.dataset.zhPh;}
         }
         function sync(){
-          [].forEach.call(box.children,function(b){b.classList.toggle('active',b.dataset.lang===state);});
+          buttons.forEach(function(b){b.classList.toggle('active',b.dataset.lang===state);});
           localStorage.setItem('lang-state',state);
         }
         function apply(s){
@@ -246,13 +238,33 @@ inject:
           state=s;
           sync();
         }
-        box.addEventListener('click',function(e){
-          var b=e.target;
-          if(b.tagName!=='BUTTON')return;
-          apply(b.dataset.lang);
-        });
-        // 恢复上次选择
+
+        // 把语言按钮插入右侧工具栏的折叠菜单
+        var wrap=document.getElementById('rightside-config-hide');
+        if(wrap){
+          var ref=document.getElementById('translateLink');
+          [{l:'zh',t:'简',tip:'简体中文'},{l:'tw',t:'繁',tip:'繁體中文'},{l:'en',t:'EN',tip:'English'}].forEach(function(item){
+            var b=document.createElement('button');
+            b.type='button';
+            b.className='lang-btn';
+            b.dataset.lang=item.l;
+            b.textContent=item.t;
+            b.title=item.tip;
+            b.addEventListener('click',function(){apply(item.l);});
+            if(ref && ref.parentNode===wrap){wrap.insertBefore(b,ref);}else{wrap.appendChild(b);}
+            buttons.push(b);
+          });
+        }
+
+        sync();
         var saved=localStorage.getItem('lang-state');
         if(saved && saved!=='zh'){setTimeout(function(){apply(saved);},400);}
+        }
+        var tries=0;
+        function boot(){
+          if(document.getElementById('rightside-config-hide') || tries++>50){init();}
+          else{setTimeout(boot,100);}
+        }
+        boot();
       })();
       </script>
