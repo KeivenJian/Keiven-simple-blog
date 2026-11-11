@@ -26,8 +26,8 @@ avatar:
 
 favicon: /images/avatar.png
 
-# 背景：浅色渐变（页面主体底色）
-background: "linear-gradient(135deg, #eef2ff 0%, #faf5ff 50%, #f0fdfa 100%)"
+# 背景：深海蓝渐变（页面主体底色，与顶部宫殿夜景同色系）
+background: "linear-gradient(165deg, #081426 0%, #10233f 40%, #1a3a63 75%, #2a4f86 100%)"
 
 # 顶部横幅图：深海女仆工坊 · 宫殿夜景
 index_img: /img/palace-night.webp
