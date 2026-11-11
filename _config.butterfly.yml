@@ -26,7 +26,6 @@ avatar:
 
 favicon: /images/avatar.png
 
-# 背景底色（图案与渐变由 inject 中的 CSS 覆盖 #web_bg 实现）
 background: "#0b1a33"
 
 # 顶部横幅图：深海女仆工坊 · 宫殿夜景
@@ -188,13 +187,27 @@ inject:
       #translateLink{display:none !important;}
       #rightside .lang-btn{font-size:12px;font-weight:700;}
       #rightside .lang-btn.active{color:#4d6bfe;}
-      /* 主背景：深海渐变 + 深海纹样平铺 */
+      /* 主背景：深海渐变 + 漂移的深海纹样 */
       #web_bg{
-        background: url(/img/bg-pattern.svg) repeat, linear-gradient(165deg, #081426 0%, #10233f 40%, #1a3a63 75%, #2a4f86 100%) !important;
-        background-size: 320px 320px, cover !important;
-        background-repeat: repeat, no-repeat !important;
-        background-position: center, center !important;
-        background-attachment: local, local !important;
+        background-color:#0b1a33 !important;
+        background-image: linear-gradient(165deg, #081426 0%, #10233f 40%, #1a3a63 75%, #2a4f86 100%) !important;
+        background-size: cover !important;
+        background-repeat: no-repeat !important;
+        background-attachment: local !important;
+        overflow: hidden;
+      }
+      #web_bg::before{
+        content:"";
+        position:absolute;
+        left:0;right:0;top:-320px;bottom:-320px;
+        background-image:url(/img/bg-pattern.svg);
+        background-repeat:repeat;
+        background-size:320px 320px;
+        animation:seaDrift 80s linear infinite;
+      }
+      @keyframes seaDrift{
+        0%{transform:translateY(0)}
+        100%{transform:translateY(-320px)}
       }
       </style>
       <script>
