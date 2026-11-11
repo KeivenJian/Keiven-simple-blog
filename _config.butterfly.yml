@@ -226,8 +226,11 @@ inject:
           var ph=document.querySelector('.search input[placeholder]');
           if(ph && ph.dataset.zhPh){ph.placeholder=ph.dataset.zhPh;delete ph.dataset.zhPh;}
         }
+        var LABEL={zh:'简',tw:'繁',en:'EN'};
+        var CYCLE=['zh','tw','en'];
+        var langBtn=null;
         function sync(){
-          buttons.forEach(function(b){b.classList.toggle('active',b.dataset.lang===state);});
+          if(langBtn){langBtn.textContent=LABEL[state];langBtn.title='当前语言：'+LABEL[state]+'，点击切换';}
           localStorage.setItem('lang-state',state);
         }
         function apply(s){
@@ -239,21 +242,18 @@ inject:
           sync();
         }
 
-        // 把语言按钮插入右侧工具栏的折叠菜单
+        // 单个语言按钮，点击循环切换：简 → 繁 → EN → 简
         var wrap=document.getElementById('rightside-config-hide');
         if(wrap){
           var ref=document.getElementById('translateLink');
-          [{l:'zh',t:'简',tip:'简体中文'},{l:'tw',t:'繁',tip:'繁體中文'},{l:'en',t:'EN',tip:'English'}].forEach(function(item){
-            var b=document.createElement('button');
-            b.type='button';
-            b.className='lang-btn';
-            b.dataset.lang=item.l;
-            b.textContent=item.t;
-            b.title=item.tip;
-            b.addEventListener('click',function(){apply(item.l);});
-            if(ref && ref.parentNode===wrap){wrap.insertBefore(b,ref);}else{wrap.appendChild(b);}
-            buttons.push(b);
+          langBtn=document.createElement('button');
+          langBtn.type='button';
+          langBtn.className='lang-btn';
+          langBtn.addEventListener('click',function(){
+            var i=CYCLE.indexOf(state);
+            apply(CYCLE[(i+1)%CYCLE.length]);
           });
+          if(ref && ref.parentNode===wrap){wrap.insertBefore(langBtn,ref);}else{wrap.appendChild(langBtn);}
         }
 
         sync();
