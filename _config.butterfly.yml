@@ -26,8 +26,8 @@ avatar:
 
 favicon: /images/avatar.png
 
-# 背景：深海蓝渐变（页面主体底色，与顶部宫殿夜景同色系）
-background: "linear-gradient(165deg, #081426 0%, #10233f 40%, #1a3a63 75%, #2a4f86 100%)"
+# 背景底色（图案与渐变由 inject 中的 CSS 覆盖 #web_bg 实现）
+background: "#0b1a33"
 
 # 顶部横幅图：深海女仆工坊 · 宫殿夜景
 index_img: /img/palace-night.webp
@@ -188,6 +188,14 @@ inject:
       #translateLink{display:none !important;}
       #rightside .lang-btn{font-size:12px;font-weight:700;}
       #rightside .lang-btn.active{color:#4d6bfe;}
+      /* 主背景：深海渐变 + 深海纹样平铺 */
+      #web_bg{
+        background: url(/img/bg-pattern.svg) repeat, linear-gradient(165deg, #081426 0%, #10233f 40%, #1a3a63 75%, #2a4f86 100%) !important;
+        background-size: 320px 320px, cover !important;
+        background-repeat: repeat, no-repeat !important;
+        background-position: center, center !important;
+        background-attachment: local, local !important;
+      }
       </style>
       <script>
       (function(){

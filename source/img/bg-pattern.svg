@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
+  <!-- 深海纹样：低透明度平铺，不干扰阅读 -->
+  <g fill="none" stroke="#cfe0ff" stroke-opacity="0.10" stroke-width="1.4">
+    <path d="M-10 48 Q 30 28 70 48 T 150 48 T 230 48 T 310 48 T 390 48"/>
+    <path d="M-10 72 Q 30 52 70 72 T 150 72 T 230 72 T 310 72 T 390 72"/>
+    <path d="M-10 250 Q 30 230 70 250 T 150 250 T 230 250 T 310 250 T 390 250" stroke-opacity="0.07"/>
+  </g>
+
+  <!-- 气泡 -->
+  <g fill="#cfe0ff" fill-opacity="0.10">
+    <circle cx="58" cy="150" r="7"/>
+    <circle cx="78" cy="128" r="4"/>
+    <circle cx="66" cy="176" r="3"/>
+    <circle cx="236" cy="96" r="6"/>
+    <circle cx="254" cy="72" r="3.5"/>
+    <circle cx="246" cy="122" r="2.5"/>
+    <circle cx="150" cy="286" r="5"/>
+    <circle cx="168" cy="266" r="3"/>
+  </g>
+  <g fill="none" stroke="#cfe0ff" stroke-opacity="0.14" stroke-width="1.2">
+    <circle cx="58" cy="150" r="7"/>
+    <circle cx="236" cy="96" r="6"/>
+    <circle cx="150" cy="286" r="5"/>
+  </g>
+
+  <!-- 小鱼剪影 -->
+  <g fill="#cfe0ff" fill-opacity="0.09">
+    <path d="M188 190 q 14 -10 28 0 q -14 10 -28 0 z"/>
+    <path d="M216 190 l 9 -7 v 14 z"/>
+    <path d="M96 232 q 10 -7 20 0 q -10 7 -20 0 z"/>
+    <path d="M116 232 l 7 -5 v 10 z"/>
+    <path d="M250 224 q 11 -8 22 0 q -11 8 -22 0 z"/>
+    <path d="M272 224 l 8 -6 v 12 z"/>
+  </g>
+
+  <!-- 光点 -->
+  <g fill="#ffffff" fill-opacity="0.12">
+    <circle cx="30" cy="286" r="1.6"/>
+    <circle cx="120" cy="60" r="1.4"/>
+    <circle cx="290" cy="170" r="1.6"/>
+    <circle cx="200" cy="40" r="1.2"/>
+    <circle cx="40" cy="200" r="1.2"/>
+  </g>
+</svg>
