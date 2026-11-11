@@ -1,50 +1,75 @@
+# ================================================================
+# GitHub Actions 自动部署流程
+# ================================================================
+# 触发条件：
+#   - 推送到 main 分支（自动）
+#   - 或在 Actions 页面手动点「Run workflow」
+#
+# 流程：
+#   1. build 任务：装依赖 → 构建站点 → 上传产物
+#   2. deploy 任务：把产物发布到 GitHub Pages
+#
+# 线上地址：https://keivenblog.me
+# ================================================================
+
 name: Deploy Hexo to GitHub Pages
 
 on:
   push:
-    branches: [main]
-  workflow_dispatch:
+    branches: [main]      # main 有提交就自动部署
+  workflow_dispatch:      # 允许网页上手动触发
 
+# 最小权限：只给部署所需的权限
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: read          # 读仓库内容
+  pages: write            # 写 GitHub Pages
+  id-token: write         # 部署时签发 OIDC 身份令牌
 
+# 同一时间只跑一个部署；有新提交时取消正在跑的旧任务
 concurrency:
   group: pages
   cancel-in-progress: true
 
 jobs:
+  # ---------------- 第一步：构建 ----------------
   build:
     runs-on: ubuntu-latest
     steps:
+      # 拉取仓库代码
       - uses: actions/checkout@v4
 
+      # 安装 Node 22，并缓存 npm 依赖加快后续构建
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
 
-      # lockfile 里的地址是本地使用的国内镜像，在 GitHub runner 上换回官方源
+      # 本地开发用的是国内镜像（npmmirror），
+      # GitHub 构建机在国外，这里把 lockfile 里的地址换回官方源
       - name: Point lockfile back to npmjs
         run: sed -i 's|registry.npmmirror.com|registry.npmjs.org|g' package-lock.json
 
+      # 按 lockfile 安装依赖（比 npm install 更严格、可复现）
       - name: Install dependencies
         run: npm ci
 
+      # 生成静态站点，输出到 public/ 目录
       - name: Build site
         run: npx hexo generate
 
+      # 把 public/ 打包成 GitHub Pages 可用的产物
       - uses: actions/upload-pages-artifact@v3
         with:
           path: public
 
+  # ---------------- 第二步：部署 ----------------
   deploy:
-    needs: build
+    needs: build                    # 依赖上一步构建完成
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # 把产物发布到 GitHub Pages
       - id: deployment
         uses: actions/deploy-pages@v4

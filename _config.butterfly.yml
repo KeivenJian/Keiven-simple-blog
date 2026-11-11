@@ -1,17 +1,31 @@
-# ---------------------------------------------------------------
-# Butterfly 主题覆盖配置
-# 完整项见 node_modules/hexo-theme-butterfly/_config.yml
-# 官方文档：https://butterfly.js.org/
-# ---------------------------------------------------------------
+# ================================================================
+# Butterfly 主题覆盖配置（站点专用）
+# ================================================================
+# 说明：
+#   1. 本文件只写「需要覆盖」的项，其余全部继承主题默认值
+#      主题默认配置在：node_modules/hexo-theme-butterfly/_config.yml
+#   2. 官方文档：https://butterfly.js.org/
+#   3. 改完需要重新构建：hexo clean && hexo generate
+#   4. 文件分为三部分：基础配置 / 注入的样式 / 注入的脚本
+# ================================================================
 
-# 导航栏
+
+# ----------------------------------------------------------------
+# 一、导航栏
+# ----------------------------------------------------------------
+# logo：导航栏左侧的图标（留空 = 只显示文字标题）
+# display_title：是否显示站点标题（Keiven Blog）
+# display_post_title：文章页顶部是否显示文章标题
+# fixed：导航栏是否固定（false = 随页面滚动）
 nav:
   logo:
   display_title: true
   display_post_title: true
   fixed: false
 
-# 菜单（简体中文）
+# 顶部菜单
+# 格式：显示文字: 链接 || 图标类名
+# 图标来自 Font Awesome，例如 fas fa-home
 menu:
   首页: / || fas fa-home
   归档: /archives/ || fas fa-archive
@@ -19,126 +33,202 @@ menu:
   标签: /tags/ || fas fa-tags
   关于: /about/ || fas fa-user
 
-# 头像与图标
+
+# ----------------------------------------------------------------
+# 二、站点外观
+# ----------------------------------------------------------------
+# 头像：侧栏卡片和关于页显示
+# effect: 鼠标悬停时头像是否旋转
 avatar:
   img: /images/avatar.png
   effect: false
 
+# 浏览器标签页的小图标（和头像用同一张图）
 favicon: /images/avatar.png
 
+# 页面背景的兜底色
+# 实际背景由下方 inject 里的 CSS 覆盖 #web_bg 实现（渐变 + 动态纹样）
 background: "#0b1a33"
 
-# 顶部横幅图：深海女仆工坊 · 宫殿夜景
+# 顶部横幅图
+# index_img：首页大图
+# default_top_img：其它页面（归档/分类/标签/关于）的默认大图
 index_img: /img/palace-night.webp
 default_top_img: /img/palace-night.webp
 
+
+# ----------------------------------------------------------------
+# 三、社交与内容展示
+# ----------------------------------------------------------------
 # 社交链接
+# 格式：图标类名: 链接 || 名称 || 颜色
 social:
   fab fa-github: https://github.com/KeivenJian || Github || '#24292f'
 
-# 代码块
+# 代码块设置
+# theme：代码高亮配色
+# copy：显示复制按钮
+# language：显示代码语言标签
 code_blocks:
   theme: light
   copy: true
   language: true
 
-# 文章元信息
+# 文章元信息（发布时间、分类、标签等）
+# page：列表页；post：文章详情页
 post_meta:
   page:
-    date_type: created
-    date_format: date
-    categories: true
-    tags: false
-    label: true
+    date_type: created      # 显示创建时间
+    date_format: date       # 绝对日期
+    categories: true        # 显示分类
+    tags: false             # 列表页不显示标签
+    label: true             # 显示「发表于」等文字标签
   post:
     position: left
-    date_type: both
+    date_type: both         # 同时显示创建和更新时间
     date_format: date
     categories: true
     tags: true
     label: true
 
-# 字数统计与阅读时长
+# 字数统计与阅读时长（依赖 hexo-word-counter 插件）
 wordcount:
   enable: true
-  post_wordcount: true
-  min2read: true
-  total_wordcount: true
+  post_wordcount: true      # 文章字数
+  min2read: true            # 预计阅读时长
+  total_wordcount: true     # 全站总字数
 
-# 本地搜索（依赖 hexo-generator-searchdb）
+# 本地搜索（依赖 hexo-generator-searchdb 插件）
+# use：搜索方案，local_search 表示纯前端搜索
 search:
   use: local_search
   placeholder: 搜索文章
   local_search:
-    preload: false
-    top_n_per_article: 1
+    preload: false          # 不预加载搜索数据，节省带宽
+    top_n_per_article: 1    # 每篇文章最多显示 1 条匹配
 
-# 评论：Utterances
+# 评论系统
+# use：使用的评论插件，Utterances 基于 GitHub Issues
 comments:
   use: Utterances
-  text: true
+  text: true                # 显示评论按钮文字
   lazyload: false
-  count: false
+  count: false              # 不显示评论数
 
+# Utterances 详细配置
+# repo：评论数据存在哪个仓库的 Issues 里
+# issue_term：页面与 Issue 的匹配方式（pathname = 按路径）
 utterances:
   repo: KeivenJian/Keiven-simple-blog
   issue_term: pathname
   light_theme: github-light
   dark_theme: photon-dark
 
-# 简繁切换（主题内置，右下角工具栏）
+# 简繁转换（主题内置功能）
+# 开启后右下角工具栏会出现「繁/简」按钮
+# 本站在下方的语言切换里接管了这个按钮，所以它被 CSS 隐藏了
 translate:
   enable: true
-  default: 繁
-  defaultEncoding: 2
+  default: 繁               # 按钮默认文字
+  defaultEncoding: 2        # 2 = 网站默认是简体（1 = 繁体）
   translateDelay: 0
   msgToTraditionalChinese: '繁'
   msgToSimplifiedChinese: '简'
 
-# ---------------------------------------------------------------
-# 页面注入：右下角深海女仆桌宠（可拖动，位置会记住）
-# ---------------------------------------------------------------
+
+# ----------------------------------------------------------------
+# 四、页面注入（核心自定义部分）
+# ----------------------------------------------------------------
+# inject 的作用：把 HTML/CSS/JS 原样插进页面
+#   bottom：插在 </body> 前，适合放脚本和浮层元素
+# 下面按顺序有 2 个注入块：
+#   1) 深海女仆桌宠（可拖动）
+#   2) 语言切换按钮 + 动态背景样式
+# ================================================================
 inject:
   bottom:
+
+    # ============================================================
+    # 注入块 1：深海女仆桌宠
+    # ------------------------------------------------------------
+    # 结构：
+    #   #pet-wrap   整个宠物容器（可拖动）
+    #   #pet-bubble 对话气泡
+    #   #pet-img    宠物图片
+    # 功能：
+    #   - 右下角悬浮，带上下浮动动画
+    #   - 用鼠标/手指拖动，位置保存在浏览器本地
+    #   - 点击（不拖动）随机说一句话
+    #   - 自动限制在窗口范围内
+    # ============================================================
     - |
+      <!-- 桌宠 DOM 结构 -->
       <div id="pet-wrap" aria-label="深海女仆桌宠">
         <div id="pet-bubble"></div>
         <img id="pet-img" src="/img/maid-pet.webp" alt="深海女仆桌宠" draggable="false">
       </div>
+
       <style>
+      /* 宠物容器：固定在右下角，可拖动 */
       #pet-wrap{position:fixed;right:18px;bottom:0;z-index:9990;width:170px;cursor:grab;user-select:none;touch-action:none;transition:transform .25s ease;}
+      /* 拖动中：取消过渡动画，避免跟手延迟 */
       #pet-wrap.dragging{transition:none;cursor:grabbing;transform:none;}
+      /* 悬停时轻微放大 */
       #pet-wrap:hover{transform:scale(1.04) translateY(-4px);}
+      /* 宠物图片：带投影和上下浮动动画（图片不响应鼠标，交给外层容器处理） */
       #pet-img{width:100%;display:block;pointer-events:none;filter:drop-shadow(0 10px 22px rgba(10,20,50,.45));animation:petFloat 3.8s ease-in-out infinite;}
+      /* 浮动关键帧：3.8 秒一轮，上下移动 9px */
       @keyframes petFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+      /* 对话气泡：默认透明，加 .show 后淡入 */
       #pet-bubble{position:absolute;left:50%;bottom:100%;margin-bottom:10px;transform:translateX(-50%) translateY(6px);background:#fff;color:#1f2a44;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.5;max-width:210px;width:max-content;box-shadow:0 8px 24px rgba(10,20,50,.18);opacity:0;transition:.3s ease;pointer-events:none;}
+      /* 气泡下方的小三角 */
       #pet-bubble::after{content:"";position:absolute;left:50%;top:100%;transform:translateX(-50%);border:7px solid transparent;border-top-color:#fff;}
+      /* 气泡显示状态 */
       #pet-bubble.show{opacity:1;transform:translateX(-50%) translateY(0);}
+      /* 手机端缩小尺寸 */
       @media(max-width:768px){#pet-wrap{width:110px;right:6px;}#pet-bubble{max-width:150px;font-size:12px;}}
       </style>
+
       <script>
       (function(){
+        // 获取 DOM 元素，缺一个就退出
         var pet=document.getElementById('pet-wrap'),bubble=document.getElementById('pet-bubble');
         if(!pet||!bubble)return;
+
+        // 点击宠物时随机说的一句话
         var lines=['欢迎来到 Keiven 的博客～','今天也在偷偷吃 token 哦','点我干嘛，快去读文章啦','这篇写得不错吧？','有问题就喊本鱼～','深海女仆工坊，为您服务'];
         var timer=null;
-        function say(){bubble.textContent=lines[Math.floor(Math.random()*lines.length)];bubble.classList.add('show');clearTimeout(timer);timer=setTimeout(function(){bubble.classList.remove('show');},3600);}
+
+        // 显示一句随机台词，3.6 秒后自动隐藏
+        function say(){
+          bubble.textContent=lines[Math.floor(Math.random()*lines.length)];
+          bubble.classList.add('show');
+          clearTimeout(timer);
+          timer=setTimeout(function(){bubble.classList.remove('show');},3600);
+        }
+
+        // 把数值限制在 min~max 之间，用于防止宠物拖出屏幕
         function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
 
-        // 恢复上次位置
+        // 恢复上次拖动后的位置（存在 localStorage 里）
         try{
           var saved=JSON.parse(localStorage.getItem('pet-pos')||'null');
           if(saved && typeof saved.left==='number' && typeof saved.top==='number'){
+            // 把 right/bottom 定位换成 left/top，方便自由拖动
             pet.style.right='auto';pet.style.bottom='auto';
             pet.style.left=clamp(saved.left,0,window.innerWidth-pet.offsetWidth)+'px';
             pet.style.top=clamp(saved.top,0,window.innerHeight-pet.offsetHeight)+'px';
           }
         }catch(err){}
 
-        var dragging=false,moved=false,startX=0,startY=0,startLeft=0,startTop=0;
+        // 拖动相关状态
+        var dragging=false;   // 是否正在拖动
+        var moved=false;      // 是否真的移动过（用来区分点击和拖动）
+        var startX=0,startY=0,startLeft=0,startTop=0; // 按下时的坐标和位置
 
+        // 按下：记录起点，并把定位方式切换成 left/top
         pet.addEventListener('pointerdown',function(e){
-          if(e.button!==undefined && e.button!==0)return;
+          if(e.button!==undefined && e.button!==0)return; // 只响应左键
           dragging=true;moved=false;
           startX=e.clientX;startY=e.clientY;
           var r=pet.getBoundingClientRect();
@@ -146,13 +236,15 @@ inject:
           pet.style.right='auto';pet.style.bottom='auto';
           pet.style.left=startLeft+'px';pet.style.top=startTop+'px';
           pet.classList.add('dragging');
-          try{pet.setPointerCapture(e.pointerId);}catch(err){}
+          try{pet.setPointerCapture(e.pointerId);}catch(err){} // 锁定指针，拖出元素也能继续拖
           e.preventDefault();
         });
 
+        // 移动：根据位移更新位置，并限制在窗口内
         pet.addEventListener('pointermove',function(e){
           if(!dragging)return;
           var dx=e.clientX-startX,dy=e.clientY-startY;
+          // 超过 4px 才算拖动，避免手抖误判
           if(Math.abs(dx)>4||Math.abs(dy)>4)moved=true;
           var left=clamp(startLeft+dx,0,window.innerWidth-pet.offsetWidth);
           var top=clamp(startTop+dy,0,window.innerHeight-pet.offsetHeight);
@@ -160,6 +252,7 @@ inject:
           e.preventDefault();
         });
 
+        // 松开：保存位置；如果没移动过，就当作点击，说一句话
         function endDrag(e){
           if(!dragging)return;
           dragging=false;
@@ -171,7 +264,7 @@ inject:
         pet.addEventListener('pointerup',endDrag);
         pet.addEventListener('pointercancel',endDrag);
 
-        // 窗口尺寸变化时保持可见
+        // 窗口尺寸变化时，把宠物拉回可见范围
         window.addEventListener('resize',function(){
           var r=pet.getBoundingClientRect();
           pet.style.right='auto';pet.style.bottom='auto';
@@ -179,91 +272,133 @@ inject:
           pet.style.top=clamp(r.top,0,window.innerHeight-pet.offsetHeight)+'px';
         });
 
+        // 页面加载 2.2 秒后自动说第一句话
         setTimeout(say,2200);
       })();
       </script>
+
+    # ============================================================
+    # 注入块 2：语言切换 + 动态背景样式
+    # ------------------------------------------------------------
+    # 功能：
+    #   1. 在右下角工具栏的折叠菜单里插入一个语言按钮
+    #      点击循环切换：简体 → 繁体 → 英文 → 简体
+    #   2. 重写页面背景：#web_bg 改成深海渐变，
+    #      再用伪元素叠加缓慢漂移的深海纹样
+    # ============================================================
     - |
       <style>
+      /* 隐藏主题自带的简繁按钮（本段脚本用自建按钮代替它） */
       #translateLink{display:none !important;}
+
+      /* 自建语言按钮样式 */
       #rightside .lang-btn{font-size:12px;font-weight:700;}
-      #rightside .lang-btn.active{color:#4d6bfe;}
-      /* 主背景：深海渐变 + 漂移的深海纹样 */
+
+      /* ---------------- 主背景：深海渐变 + 漂移纹样 ---------------- */
+      /* #web_bg 是主题提供的全屏背景层，这里覆盖它的背景图 */
       #web_bg{
-        background-color:#0b1a33 !important;
-        background-image: linear-gradient(165deg, #081426 0%, #10233f 40%, #1a3a63 75%, #2a4f86 100%) !important;
+        background-color:#0b1a33 !important;                                  /* 兜底深色 */
+        background-image: linear-gradient(165deg, #081426 0%, #10233f 40%, #1a3a63 75%, #2a4f86 100%) !important; /* 深海蓝渐变 */
         background-size: cover !important;
         background-repeat: no-repeat !important;
         background-attachment: local !important;
         overflow: hidden;
       }
+      /* ::before 伪元素：平铺深海纹样（水波、气泡、小鱼） */
       #web_bg::before{
         content:"";
         position:absolute;
-        left:0;right:0;top:-320px;bottom:-320px;
+        left:0;right:0;top:-320px;bottom:-320px;   /* 上下各多出一屏，保证移动时不断层 */
         background-image:url(/img/bg-pattern.svg);
         background-repeat:repeat;
-        background-size:320px 320px;
-        animation:seaDrift 80s linear infinite;
+        background-size:320px 320px;                /* 与图案尺寸一致 */
+        animation:seaDrift 80s linear infinite;     /* 80 秒一轮缓慢上移 */
       }
+      /* 漂移关键帧：上移正好一个图案高度（320px），实现无缝循环 */
       @keyframes seaDrift{
         0%{transform:translateY(0)}
         100%{transform:translateY(-320px)}
       }
       </style>
+
       <script>
       (function(){
+        // 等右侧工具栏渲染完成后再初始化
         function init(){
+        // 英文对照表：页面上的中文 → 英文
         var EN={'首页':'Home','归档':'Archives','分类':'Categories','标签':'Tags','关于':'About','搜索':'Search'};
-        var originals=[];
-        var state='zh';
+        var originals=[];   // 记录被替换的节点，方便还原
+        var state='zh';     // 当前语言状态：zh / tw / en
         var buttons=[];
 
+        // 读取主题存在 cookie 里的简繁状态
+        // translate-chn-cht：1 = 繁体，2 = 简体
         function isTw(){
           var m=document.cookie.match(/translate-chn-cht=(\d)/);
           return m && Number(m[1])===1;
         }
+
+        // 调用主题内置的简繁转换函数
         function toggleTw(){
           if(window.translateFn && typeof window.translateFn.translatePage==='function'){
             window.translateFn.translatePage();
           }
         }
+
+        // 遍历某个节点下的所有文本节点，对每个文本执行 fn
         function walk(root,fn){
           var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null);
           var n;
           while((n=w.nextNode()))fn(n);
         }
+
+        // 中文 → 英文：只处理导航栏和搜索框，文章内容不动
         function toEN(){
           var nav=document.getElementById('nav')||document.body;
           walk(nav,function(n){
             var t=n.nodeValue.trim();
-            if(EN[t]){originals.push({node:n,text:n.nodeValue});n.nodeValue=n.nodeValue.replace(t,EN[t]);}
+            if(EN[t]){
+              originals.push({node:n,text:n.nodeValue});          // 记下原文
+              n.nodeValue=n.nodeValue.replace(t,EN[t]);          // 替换成英文
+            }
           });
           var ph=document.querySelector('.search input[placeholder]');
           if(ph && ph.placeholder){ph.dataset.zhPh=ph.placeholder;ph.placeholder='Search';}
         }
+
+        // 英文 → 中文：把之前替换过的文本还原
         function toZH(){
           originals.forEach(function(o){o.node.nodeValue=o.text;});
           originals=[];
           var ph=document.querySelector('.search input[placeholder]');
           if(ph && ph.dataset.zhPh){ph.placeholder=ph.dataset.zhPh;delete ph.dataset.zhPh;}
         }
+
+        // 按钮上显示的文字 / 切换顺序
         var LABEL={zh:'简',tw:'繁',en:'EN'};
         var CYCLE=['zh','tw','en'];
         var langBtn=null;
+
+        // 同步按钮显示和本地记忆
         function sync(){
-          if(langBtn){langBtn.textContent=LABEL[state];langBtn.title='当前语言：'+LABEL[state]+'，点击切换';}
+          if(langBtn){
+            langBtn.textContent=LABEL[state];
+            langBtn.title='当前语言：'+LABEL[state]+'，点击切换';
+          }
           localStorage.setItem('lang-state',state);
         }
+
+        // 核心切换逻辑
         function apply(s){
-          if(state==='en' && s!=='en')toZH();
-          if(isTw() && s!=='tw')toggleTw();
-          if(s==='tw' && !isTw())toggleTw();
-          if(s==='en')toEN();
+          if(state==='en' && s!=='en')toZH();      // 离开英文：先还原中文
+          if(isTw() && s!=='tw')toggleTw();        // 尽量回到简体
+          if(s==='tw' && !isTw())toggleTw();       // 需要繁体：调用主题转换
+          if(s==='en')toEN();                      // 需要英文：替换导航文字
           state=s;
           sync();
         }
 
-        // 单个语言按钮，点击循环切换：简 → 繁 → EN → 简
+        // 在右侧工具栏的折叠菜单里插入语言按钮
         var wrap=document.getElementById('rightside-config-hide');
         if(wrap){
           var ref=document.getElementById('translateLink');
@@ -271,16 +406,22 @@ inject:
           langBtn.type='button';
           langBtn.className='lang-btn';
           langBtn.addEventListener('click',function(){
+            // 按 CYCLE 顺序切到下一个
             var i=CYCLE.indexOf(state);
             apply(CYCLE[(i+1)%CYCLE.length]);
           });
-          if(ref && ref.parentNode===wrap){wrap.insertBefore(langBtn,ref);}else{wrap.appendChild(langBtn);}
+          if(ref && ref.parentNode===wrap){wrap.insertBefore(langBtn,ref);}
+          else{wrap.appendChild(langBtn);}
         }
 
         sync();
+
+        // 恢复上次选择的语言
         var saved=localStorage.getItem('lang-state');
         if(saved && saved!=='zh'){setTimeout(function(){apply(saved);},400);}
         }
+
+        // 轮询等待右侧工具栏出现（最多等 5 秒），然后再初始化
         var tries=0;
         function boot(){
           if(document.getElementById('rightside-config-hide') || tries++>50){init();}
