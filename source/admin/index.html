@@ -74,6 +74,31 @@
   #status.ok{color:var(--ok);}
   #status.err{color:var(--err);}
   button:disabled{opacity:.5;cursor:not-allowed;}
+
+  /* ---------- 编辑器工具栏与音乐面板 ---------- */
+  .editor-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+  .editor-bar label{margin:0;}
+  .tool-btn{
+    padding:6px 12px;border:1px solid var(--line);border-radius:8px;
+    background:var(--panel);color:var(--text);font-size:12px;cursor:pointer;
+  }
+  .tool-btn:hover{border-color:var(--primary);color:var(--primary);}
+  .music-panel{
+    border:1px solid var(--line);border-radius:10px;background:var(--panel);
+    padding:14px;margin-bottom:10px;display:flex;flex-direction:column;gap:10px;
+  }
+  .music-panel.hidden{display:none;}
+  .music-panel input[type=file]{
+    width:100%;color:var(--muted);font-size:12px;padding:6px 0;
+  }
+  .music-panel input[type=file]::file-selector-button{
+    margin-right:8px;padding:6px 10px;border-radius:6px;border:1px solid var(--line);
+    background:var(--bg);color:var(--text);font-size:12px;cursor:pointer;
+  }
+  #music-status{font-size:12px;}
+  #music-status.ok{color:var(--ok);}
+  #music-status.err{color:var(--err);}
+  .ghost{background:transparent !important;color:var(--muted) !important;border:1px solid var(--line) !important;}
   /* ---------- 登录验证层 ---------- */
   .login{
     position:fixed;inset:0;z-index:100;
@@ -157,7 +182,44 @@
     </div>
 
     <div class="editor">
-      <label for="body">正文（Markdown）</label>
+      <div class="editor-bar">
+        <label for="body">正文（Markdown）</label>
+        <button type="button" class="tool-btn" id="btn-music">🎵 插入音乐播放器</button>
+      </div>
+
+      <!-- 音乐上传面板：默认隐藏，点「插入音乐播放器」展开 -->
+      <div class="music-panel hidden" id="musicPanel">
+        <div class="row">
+          <div>
+            <label>歌名</label>
+            <input type="text" id="m-title" placeholder="不填就用文件名">
+          </div>
+          <div>
+            <label>歌手</label>
+            <input type="text" id="m-author" placeholder="不填显示「未知」">
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>音频文件（必选）</label>
+            <input type="file" id="m-audio" accept="audio/*">
+          </div>
+          <div>
+            <label>封面图（可选）</label>
+            <input type="file" id="m-cover" accept="image/*">
+          </div>
+          <div>
+            <label>歌词 .lrc（可选）</label>
+            <input type="file" id="m-lrc" accept=".lrc">
+          </div>
+        </div>
+        <div class="actions">
+          <button type="button" id="btn-insert-music">上传并插入</button>
+          <button type="button" id="btn-cancel-music" class="ghost">取消</button>
+          <span id="music-status"></span>
+        </div>
+      </div>
+
       <textarea id="body" placeholder="## 小标题&#10;&#10;直接写内容就行。"></textarea>
     </div>
   </div>
@@ -395,6 +457,111 @@ function buildMarkdown(title, tags, category, body, date) {
   lines.push("---", "", body.trim(), "");
   return lines.join("\n");
 }
+
+// ============================================================
+// 文件上传（音乐播放器用）
+// ============================================================
+// 文件转 base64（GitHub Contents API 要求）
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result).split(",")[1]);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
+// 上传一个文件到仓库指定目录，返回站点内路径（如 /music/xxx.mp3）
+async function uploadFile(file, dir) {
+  if (!getToken()) throw new Error("缺少 Token");
+  if (file.size > 10 * 1024 * 1024) throw new Error("文件超过 10MB，建议压缩后再传");
+
+  const name = file.name;
+  const path = `${dir}/${name}`;
+  const content = await fileToBase64(file);
+
+  // 同名文件已存在时，更新必须带上 sha
+  let sha = null;
+  try {
+    const existing = await api(`contents/${encodeURIComponent(path)}`);
+    sha = existing.sha;
+  } catch (e) { /* 文件不存在，正常继续 */ }
+
+  const payload = { message: `upload: ${name}`, content, branch: "main" };
+  if (sha) payload.sha = sha;
+
+  await api(`contents/${encodeURIComponent(path)}`, {
+    method: "PUT",
+    body: JSON.stringify(payload)
+  });
+
+  return `/${path}`;
+}
+
+// 在正文光标位置插入文本
+function insertAtCursor(text) {
+  const ta = $("body");
+  const start = ta.selectionStart;
+  const end = ta.selectionEnd;
+  ta.value = ta.value.slice(0, start) + text + ta.value.slice(end);
+  ta.selectionStart = ta.selectionEnd = start + text.length;
+  ta.focus();
+}
+
+// 展开 / 收起音乐上传面板
+$("btn-music").addEventListener("click", () => {
+  $("musicPanel").classList.toggle("hidden");
+});
+$("btn-cancel-music").addEventListener("click", () => {
+  $("musicPanel").classList.add("hidden");
+  $("music-status").textContent = "";
+});
+
+// 上传音频（可选封面/歌词）并插入 aplayer 标签
+$("btn-insert-music").addEventListener("click", async () => {
+  const st = $("music-status");
+  const audio = $("m-audio").files[0];
+  if (!audio) { st.textContent = "请先选择音频文件"; st.className = "err"; return; }
+
+  const btn = $("btn-insert-music");
+  btn.disabled = true;
+  st.textContent = "上传中……";
+  st.className = "";
+
+  try {
+    const title = $("m-title").value.trim() || audio.name.replace(/\.[^.]+$/, "");
+    const author = $("m-author").value.trim() || "未知";
+
+    // 音频放 music/，封面放 images/，歌词放 music/
+    const audioPath = await uploadFile(audio, "music");
+    st.textContent = "音频已上传，处理其他文件……";
+
+    let coverPath = null;
+    const cover = $("m-cover").files[0];
+    if (cover) coverPath = await uploadFile(cover, "images");
+
+    let lrcPath = null;
+    const lrc = $("m-lrc").files[0];
+    if (lrc) lrcPath = await uploadFile(lrc, "music");
+
+    let tag = `{% aplayer "${title}" "${author}" "${audioPath}"`;
+    if (coverPath) tag += ` "${coverPath}"`;
+    if (lrcPath) tag += ` "lrc:${lrcPath}"`;
+    tag += " %}";
+
+    insertAtCursor(tag);
+    st.textContent = "✅ 已插入到正文光标位置";
+    st.className = "ok";
+    $("m-audio").value = "";
+    $("m-cover").value = "";
+    $("m-lrc").value = "";
+  } catch (e) {
+    st.textContent = `上传失败：${e.message}`;
+    st.className = "err";
+  } finally {
+    btn.disabled = false;
+  }
+});
 
 // ============================================================
 // 保存
