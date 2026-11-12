@@ -649,7 +649,11 @@ inject:
             }
             var activeEl = els[idx];
             if (activeEl) {
-              lyricsEl.scrollTop = activeEl.offsetTop - lyricsEl.clientHeight / 2 + activeEl.clientHeight / 2;
+              // 让当前行尽量居中（相对歌词容器计算，兼容不同浏览器）
+              var target = activeEl.offsetTop - lyricsEl.clientHeight / 2 + activeEl.clientHeight / 2;
+              if (Math.abs(lyricsEl.scrollTop - target) > 2) {
+                lyricsEl.scrollTop = Math.max(0, target);
+              }
             }
           }
 
@@ -689,6 +693,22 @@ inject:
             document.getElementById('mp-toggle').addEventListener('click', function(){
               if (ap.audio.paused) ap.play(); else ap.pause();
             });
+
+            // 进入页面自动播放；浏览器通常会拦截，拦截后等用户第一次点击/触摸再播
+            function tryPlay(){
+              if (!ap || !ap.audio || !ap.audio.paused) return;
+              var p = null;
+              try { p = ap.play(); } catch (e) {}
+              if (p && typeof p.catch === 'function') p.catch(function(){});
+            }
+            function startOnFirstGesture(){
+              if (ap && ap.audio && ap.audio.paused) { try { ap.play(); } catch (e) {} }
+              document.removeEventListener('click', startOnFirstGesture);
+              document.removeEventListener('touchstart', startOnFirstGesture);
+            }
+            tryPlay();
+            document.addEventListener('click', startOnFirstGesture);
+            document.addEventListener('touchstart', startOnFirstGesture);
 
             // 关闭弹窗：只隐藏，音乐继续
             document.getElementById('mp-close').addEventListener('click', function(){
