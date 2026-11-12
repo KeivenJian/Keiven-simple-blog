@@ -33,23 +33,23 @@
 
   /* ---------- 滚动条：让侧栏和主区的滚动条可见 ---------- */
   #list::-webkit-scrollbar,
-  main::-webkit-scrollbar,
+  .main-scroll::-webkit-scrollbar,
   .search-results::-webkit-scrollbar{width:8px;}
   #list::-webkit-scrollbar-thumb,
-  main::-webkit-scrollbar-thumb,
+  .main-scroll::-webkit-scrollbar-thumb,
   .search-results::-webkit-scrollbar-thumb{
     background:rgba(142,164,200,.35);border-radius:4px;
   }
   #list::-webkit-scrollbar-thumb:hover,
-  main::-webkit-scrollbar-thumb:hover,
+  .main-scroll::-webkit-scrollbar-thumb:hover,
   .search-results::-webkit-scrollbar-thumb:hover{
     background:rgba(142,164,200,.6);
   }
   #list::-webkit-scrollbar-track,
-  main::-webkit-scrollbar-track,
+  .main-scroll::-webkit-scrollbar-track,
   .search-results::-webkit-scrollbar-track{background:transparent;}
   /* Firefox */
-  #list, main, .search-results{
+  #list, .main-scroll, .search-results{
     scrollbar-width:thin;
     scrollbar-color:rgba(142,164,200,.45) transparent;
   }
@@ -61,7 +61,9 @@
   .item:hover{background:var(--panel-2);color:var(--text);}
   .item.active{background:var(--panel-2);color:#fff;box-shadow:inset 3px 0 0 var(--primary);}
   /* ---------- 右侧编辑区 ---------- */
-  main{flex:1;display:flex;flex-direction:column;padding:20px 24px;gap:12px;min-width:0;overflow-y:auto;}
+  main{flex:1;display:flex;flex-direction:column;padding:20px 24px;gap:12px;min-width:0;overflow:hidden;}
+  /* 中间滚动区：内容超出时只滚动这一块，底部按钮固定 */
+  .main-scroll{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding-right:4px;}
   .token-box{
     border:1px dashed var(--line);border-radius:10px;padding:12px 14px;
     background:var(--panel);
@@ -81,9 +83,9 @@
     outline:none;
   }
   input:focus,textarea:focus{border-color:var(--primary);}
-  textarea{flex:1;resize:none;min-height:200px;line-height:1.7;font-size:14px;}
-  .fields{display:flex;flex-direction:column;gap:12px;flex:1;min-height:0;}
-  .editor{flex:1;display:flex;flex-direction:column;min-height:0;}
+  textarea{flex:none;resize:vertical;height:clamp(220px,42vh,600px);min-height:220px;line-height:1.7;font-size:14px;}
+  .fields{display:flex;flex-direction:column;gap:12px;flex:none;}
+  .editor{flex:none;display:flex;flex-direction:column;}
   .actions{display:flex;align-items:center;gap:12px;}
   .actions button{
     padding:10px 20px;border:0;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;
@@ -171,8 +173,9 @@
     body{flex-direction:column;height:auto;overflow:auto;}
     aside{width:100%;flex:none;border-right:0;border-bottom:1px solid var(--line);max-height:34vh;}
     #list{max-height:24vh;}
-    main{padding:16px;overflow-y:visible;}
-    textarea{min-height:260px;}
+    main{padding:16px;overflow:visible;}
+    .main-scroll{overflow:visible;}
+    textarea{height:auto;min-height:260px;}
   }
 </style>
 </head>
@@ -200,6 +203,7 @@
 
 <!-- 右侧：编辑区 -->
 <main>
+  <div class="main-scroll">
   <div class="token-box" id="tokenBox">
     <label for="token">GitHub Token（只需填一次，存在本机浏览器）</label>
     <input type="password" id="token" placeholder="ghp_...">
@@ -307,6 +311,7 @@
 
       <textarea id="body" placeholder="## 小标题&#10;&#10;直接写内容就行。"></textarea>
     </div>
+  </div>
   </div>
 
   <div class="actions">
