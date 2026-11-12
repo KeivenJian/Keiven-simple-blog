@@ -1121,13 +1121,20 @@ $("btn-log").addEventListener("click", async () => {
     // 去掉 front-matter
     const body = text.replace(/^---[\s\S]*?\n---\r?\n?/, "");
 
-    // 只取最新一节：第一个 "## " 到下一个 "## " 之间
-    const first = body.indexOf("## ");
-    let latest = body.trim();
-    if (first >= 0) {
-      const next = body.indexOf("## ", first + 3);
-      latest = (next >= 0 ? body.slice(first, next) : body.slice(first)).trim();
+    // 只取最新一节：按行找「行首是 ## 」的标题
+    // 不能用 indexOf("## ")：规范说明里的反引号内也包含 ##，会误判
+    const lines = body.split(/\r?\n/);
+    let start = -1;
+    let end = -1;
+    for (let i = 0; i < lines.length; i++) {
+      if (/^## /.test(lines[i])) {
+        if (start < 0) start = i;
+        else { end = i; break; }
+      }
     }
+    const latest = start >= 0
+      ? lines.slice(start, end > 0 ? end : lines.length).join("\n").trim()
+      : "暂无日志";
     $("log-content").textContent = latest || "暂无日志";
   } catch (e) {
     $("log-content").textContent = `加载失败：${e.message}`;
