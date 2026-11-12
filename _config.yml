@@ -128,3 +128,16 @@ symbols_count_time:
   awl: 4
   wpm: 300
   suffix: mins.
+
+# 站点地图（hexo-generator-sitemap）
+# 生成 /sitemap.xml，方便搜索引擎收录
+sitemap:
+  path: sitemap.xml
+
+# 自动摘要（hexo-excerpt）
+# 首页列表不再显示全文，而是截取前 2 段作为摘要
+excerpt:
+  depth: 2                # 取前几段
+  excerpt_excludes: []    # 不参与摘要的选择器
+  more_excludes: []
+  hideWholePostExcerpts: false
