@@ -450,7 +450,14 @@ async function api(path, options = {}) {
   });
   if (res.status === 204) return null;
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(`HTTP ${res.status} ${data.message || ""}`);
+  if (!res.ok) {
+    // Token 失效 / 权限不足：自动把输入框放出来，方便重新填写
+    if (res.status === 401 || res.status === 403) {
+      $("tokenBox").classList.remove("hidden");
+      setStatus("Token 失效或权限不足，请重新填写", "err");
+    }
+    throw new Error(`HTTP ${res.status} ${data.message || ""}`);
+  }
   return data;
 }
 
@@ -462,6 +469,7 @@ async function loadList() {
   listEl.innerHTML = '<div class="item">加载中……</div>';
   try {
     const items = await api(`contents/${POSTS_DIR}`);
+    $("tokenBox").classList.add("hidden");   // Token 有效：收起输入框
     listEl.innerHTML = "";
     if (!items.length) {
       listEl.innerHTML = '<div class="item">还没有文章</div>';
