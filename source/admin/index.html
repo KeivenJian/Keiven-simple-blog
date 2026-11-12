@@ -60,6 +60,15 @@
   }
   .side-search input:focus{border-color:var(--primary);}
 
+  /* 筛选：全部 / 已发布 / 隐藏 */
+  .side-filter{display:flex;gap:6px;padding:0 12px 10px;}
+  .filter-btn{
+    flex:1;padding:5px 0;border:1px solid var(--line);border-radius:7px;
+    background:transparent;color:var(--muted);font-size:11px;cursor:pointer;
+  }
+  .filter-btn:hover{color:var(--text);}
+  .filter-btn.active{background:var(--primary);border-color:var(--primary);color:#fff;}
+
   .item{
     display:flex;align-items:center;gap:4px;
     padding:8px 10px;border-radius:8px;font-size:13px;cursor:pointer;
@@ -222,6 +231,11 @@
   </div>
   <div class="side-search">
     <input type="text" id="search-input" placeholder="搜索标题或分类">
+  </div>
+  <div class="side-filter">
+    <button type="button" class="filter-btn active" data-filter="all">全部</button>
+    <button type="button" class="filter-btn" data-filter="pub">已发布</button>
+    <button type="button" class="filter-btn" data-filter="hid">隐藏</button>
   </div>
   <div id="list"></div>
 </aside>
@@ -537,6 +551,7 @@ function renderItem(m) {
   div.className = "item" + (m.hide ? " hidden-post" : "");
   div.dataset.name = m.name;
   div.dataset.category = m.category || "";
+  div.dataset.hidden = m.hide ? "1" : "0";
 
   const main = document.createElement("div");
   main.className = "item-main";
@@ -578,15 +593,32 @@ function renderItem(m) {
   $("list").appendChild(div);
 }
 
-// 搜索：按标题和分类过滤列表
+// 搜索 + 筛选：按关键词（标题/分类）和「全部/已发布/隐藏」过滤
+let currentFilter = "all";
 function applySearch() {
   const kw = ($("search-input").value || "").trim().toLowerCase();
   document.querySelectorAll("#list .item").forEach((el) => {
     const text = (el.dataset.name + " " + (el.dataset.category || "")).toLowerCase();
-    el.style.display = !kw || text.includes(kw) ? "" : "none";
+    const isHidden = el.dataset.hidden === "1";
+    const matchKw = !kw || text.includes(kw);
+    const matchFilter =
+      currentFilter === "all" ||
+      (currentFilter === "hid" ? isHidden : !isHidden);
+    el.style.display = matchKw && matchFilter ? "" : "none";
   });
 }
 $("search-input").addEventListener("input", applySearch);
+
+// 筛选按钮：全部 / 已发布 / 隐藏
+document.querySelectorAll(".filter-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    currentFilter = btn.dataset.filter;
+    document.querySelectorAll(".filter-btn").forEach((b) => {
+      b.classList.toggle("active", b === btn);
+    });
+    applySearch();
+  });
+});
 
 // 隐藏 / 显示文章：在 source/_posts 和 source/_drafts 之间移动文件
 // 草稿目录不会被 Hexo 编译，所以隐藏的文章既不在首页也不生成页面
