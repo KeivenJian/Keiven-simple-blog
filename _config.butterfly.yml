@@ -431,3 +431,139 @@ inject:
         boot();
       })();
       </script>
+
+    # ============================================================
+    # 注入块 3：音乐播放器弹窗
+    # ------------------------------------------------------------
+    # 功能：
+    #   - 页面里有 APlayer（音乐播放器）时，自动弹出小窗
+    #   - 关闭小窗后音乐继续播，只有点暂停才停
+    #   - 右下角工具栏加「🎵」按钮，随时重新打开
+    # ============================================================
+    - |
+      <div id="music-pop" class="music-pop hidden">
+        <div class="mp-card">
+          <button type="button" class="mp-close" id="mp-close" title="关闭（音乐继续播放）">×</button>
+          <div class="mp-disc"><img id="mp-cover" alt="封面"></div>
+          <div class="mp-title" id="mp-title">正在播放</div>
+          <div class="mp-artist" id="mp-artist"></div>
+          <div class="mp-ctrl">
+            <button type="button" id="mp-toggle" title="播放 / 暂停">▶</button>
+          </div>
+        </div>
+      </div>
+      <style>
+      .music-pop{position:fixed;right:24px;bottom:90px;z-index:9995;}
+      .music-pop.hidden{display:none;}
+      .mp-card{
+        position:relative;width:240px;padding:18px 16px 14px;
+        background:linear-gradient(160deg,#111a2e,#1b2b4a);
+        border:1px solid rgba(255,255,255,.08);border-radius:16px;
+        box-shadow:0 18px 50px rgba(0,0,0,.55);color:#e8eefc;text-align:center;
+      }
+      .mp-close{
+        position:absolute;top:8px;right:8px;width:24px;height:24px;border:0;
+        border-radius:50%;background:rgba(255,255,255,.08);color:#8ea4c8;
+        font-size:15px;line-height:1;cursor:pointer;
+      }
+      .mp-close:hover{background:rgba(255,255,255,.16);color:#fff;}
+      /* 黑胶唱片 */
+      .mp-disc{
+        width:120px;height:120px;margin:6px auto 14px;border-radius:50%;
+        background:#05070c;padding:8px;box-shadow:0 0 0 6px #0b1220, inset 0 0 18px rgba(0,0,0,.9);
+        animation:mpSpin 8s linear infinite paused;
+      }
+      .mp-disc.playing{animation-play-state:running;}
+      .mp-disc img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;}
+      @keyframes mpSpin{to{transform:rotate(360deg);}}
+      .mp-title{
+        font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;
+        text-overflow:ellipsis;
+      }
+      .mp-artist{font-size:11px;color:#8ea4c8;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+      .mp-ctrl{margin-top:12px;}
+      .mp-ctrl button{
+        width:38px;height:38px;border:0;border-radius:50%;
+        background:#4d6bfe;color:#fff;font-size:15px;cursor:pointer;
+      }
+      .mp-ctrl button:hover{filter:brightness(1.1);}
+      @media(max-width:768px){.music-pop{right:12px;bottom:80px;}.mp-card{width:190px;padding:14px 12px 12px;}.mp-disc{width:92px;height:92px;}}
+      </style>
+      <script>
+      (function(){
+        function boot(){
+          var pop = document.getElementById('music-pop');
+          if (!pop) return;
+          var ap = null, cover = document.getElementById('mp-cover');
+
+          function findPlayer(){
+            var ps = window.aplayers;
+            return ps && ps.length ? ps[0] : null;
+          }
+
+          // 同步歌曲信息、播放状态、唱片旋转
+          function update(){
+            if (!ap) return;
+            var list = (ap.list && ap.list.audios) || [];
+            var idx = (ap.list && ap.list.index) || 0;
+            var info = list[idx] || {};
+            document.getElementById('mp-title').textContent = info.name || '正在播放';
+            document.getElementById('mp-artist').textContent = info.artist || '';
+            if (info.cover) cover.src = info.cover;
+            var playing = ap.audio && !ap.audio.paused;
+            document.getElementById('mp-toggle').textContent = playing ? '⏸' : '▶';
+            pop.querySelector('.mp-disc').classList.toggle('playing', !!playing);
+          }
+
+          function init(){
+            ap = findPlayer();
+            if (!ap) return;
+            update();
+            pop.classList.remove('hidden');   // 进入页面自动弹出
+
+            // 播放 / 暂停
+            document.getElementById('mp-toggle').addEventListener('click', function(){
+              if (ap.audio.paused) ap.play(); else ap.pause();
+            });
+
+            // 关闭弹窗：只隐藏，音乐继续
+            document.getElementById('mp-close').addEventListener('click', function(){
+              pop.classList.add('hidden');
+            });
+
+            ['play','pause','ended','listswitch','loadeddata'].forEach(function(ev){
+              try { ap.on(ev, update); } catch (e) {}
+            });
+
+            // 右侧工具栏加「🎵」按钮，随时重新打开
+            var wrap = document.getElementById('rightside-config-hide');
+            if (wrap) {
+              var btn = document.createElement('button');
+              btn.type = 'button';
+              btn.textContent = '🎵';
+              btn.title = '打开音乐播放器';
+              btn.style.fontSize = '14px';
+              btn.addEventListener('click', function(){
+                pop.classList.remove('hidden');
+                update();
+              });
+              var ref = document.getElementById('translateLink');
+              if (ref && ref.parentNode === wrap) wrap.insertBefore(btn, ref);
+              else wrap.appendChild(btn);
+            }
+          }
+
+          // 等 APlayer 初始化（页面有播放器才启动）
+          var tries = 0;
+          function wait(){
+            if (window.aplayers && window.aplayers.length) init();
+            else if (tries++ < 40) setTimeout(wait, 250);
+          }
+          wait();
+        }
+
+        if (document.readyState === 'complete') boot();
+        else window.addEventListener('load', boot);
+      })();
+      </script>
+
