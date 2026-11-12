@@ -478,7 +478,7 @@ inject:
         </div>
       </div>
       <style>
-      .music-pop{position:fixed;right:24px;top:50%;transform:translateY(-50%);z-index:9995;}
+      .music-pop{position:fixed;right:8px;top:45%;transform:translateY(-50%);z-index:9995;}
       .music-pop.hidden{display:none;}
       .mp-card{
         position:relative;width:220px;padding:14px 12px 12px;
