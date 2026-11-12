@@ -1109,33 +1109,29 @@ $("btn-delete").addEventListener("click", async () => {
 $("btn-new").addEventListener("click", resetForm);
 
 // ============================================================
-// 最新日志弹窗：读取日志文章，只显示最近一天的内容
+// 最新日志弹窗：从草稿目录里找最新的「日志YYYYMMDD.md」，显示整篇
 // ============================================================
 $("btn-log").addEventListener("click", async () => {
   $("log-modal").classList.remove("hidden");
   $("log-content").textContent = "加载中……";
   try {
-    const data = await api(`contents/source/_drafts/${encodeURIComponent("更新日志.md")}`);
+    // 列出草稿目录，按文件名找日期最大的日志
+    const list = await api(`contents/${DRAFTS_DIR}`);
+    const logs = (list || [])
+      .filter((f) => /^日志\d{8}\.md$/.test(f.name))
+      .sort((a, b) => b.name.localeCompare(a.name));
+
+    if (!logs.length) {
+      $("log-content").textContent = "暂无日志";
+      return;
+    }
+
+    const data = await api(`contents/${DRAFTS_DIR}/${encodeURIComponent(logs[0].name)}`);
     const text = fromBase64(data.content);
 
-    // 去掉 front-matter
-    const body = text.replace(/^---[\s\S]*?\n---\r?\n?/, "");
-
-    // 只取最新一节：按行找「行首是 ## 」的标题
-    // 不能用 indexOf("## ")：规范说明里的反引号内也包含 ##，会误判
-    const lines = body.split(/\r?\n/);
-    let start = -1;
-    let end = -1;
-    for (let i = 0; i < lines.length; i++) {
-      if (/^## /.test(lines[i])) {
-        if (start < 0) start = i;
-        else { end = i; break; }
-      }
-    }
-    const latest = start >= 0
-      ? lines.slice(start, end > 0 ? end : lines.length).join("\n").trim()
-      : "暂无日志";
-    $("log-content").textContent = latest || "暂无日志";
+    // 去掉 front-matter，显示整篇（一篇就是一天）
+    const body = text.replace(/^---[\s\S]*?\n---\r?\n?/, "").trim();
+    $("log-content").textContent = body || "暂无内容";
   } catch (e) {
     $("log-content").textContent = `加载失败：${e.message}`;
   }
