@@ -389,18 +389,18 @@
         </div>
         <div class="music-hint">ID 怎么找：打开网易云歌曲页，地址里 <code>id=</code> 后面的那串数字就是。</div>
 
-        <!-- 搜索：找到歌后点「填入 ID」即可 -->
-        <div class="music-divider">搜索歌曲（自动填入 ID）</div>
+        <!-- 粘贴链接自动提取 ID（在线搜索接口不可靠，改成链接解析） -->
+        <div class="music-divider">粘贴歌曲链接，自动提取 ID</div>
         <div class="row">
           <div style="flex:3">
-            <label>关键词</label>
-            <input type="text" id="m-keyword" placeholder="歌名或歌手，例如：晴天">
+            <label>歌曲链接或 ID</label>
+            <input type="text" id="m-link" placeholder="https://music.163.com/song?id=1824045033 或直接填数字">
           </div>
           <div style="flex:1;display:flex;align-items:flex-end">
-            <button type="button" class="tool-btn" id="btn-search-music" style="width:100%;height:38px">搜索</button>
+            <button type="button" class="tool-btn" id="btn-extract-id" style="width:100%;height:38px">提取 ID</button>
           </div>
         </div>
-        <div class="search-results" id="search-results"></div>
+        <div class="music-hint" id="extract-status"></div>
       </div>
 
       <textarea id="body" placeholder="## 小标题&#10;&#10;直接写内容就行。"></textarea>
@@ -983,59 +983,33 @@ $("btn-insert-music").addEventListener("click", async () => {
   }
 });
 
-// 从 Meting 返回的地址里提取歌曲 ID
-function extractId(url) {
-  const m = String(url).match(/[?&]id=(\d+)/);
+// 从链接或纯数字里提取歌曲 ID
+// 支持：https://music.163.com/song?id=1824045033 或 直接填 1824045033
+function extractIdFromInput(v) {
+  const s = String(v).trim();
+  if (/^\d+$/.test(s)) return s;              // 纯数字
+  const m = s.match(/[?&]id=(\d+)/);          // 链接中的 id=数字
   return m ? m[1] : "";
 }
 
-// 搜索平台歌曲：结果显示为列表，点击「填入 ID」
-$("btn-search-music").addEventListener("click", async () => {
-  const kw = $("m-keyword").value.trim();
-  const box = $("search-results");
-  if (!kw) { box.textContent = "请输入关键词"; return; }
+// 粘贴链接 → 自动提取 ID，填进上面的输入框
+$("btn-extract-id").addEventListener("click", () => {
+  const st = $("extract-status");
+  const v = $("m-link").value.trim();
+  if (!v) {
+    st.textContent = "请粘贴链接或直接填写 ID";
+    st.style.color = "var(--err)";
+    return;
+  }
 
-  const server = $("m-server").value;
-  box.textContent = "搜索中……";
-
-  try {
-    const res = await fetch(
-      `https://api.i-meto.com/meting/api?server=${server}&type=search&keyword=${encodeURIComponent(kw)}`
-    );
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    const list = await res.json();
-
-    box.innerHTML = "";
-    if (!list.length) { box.textContent = "没有找到结果"; return; }
-
-    list.slice(0, 10).forEach((item) => {
-      const id = extractId(item.url);
-      const row = document.createElement("div");
-      row.className = "sr-item";
-
-      const info = document.createElement("div");
-      const strong = document.createElement("strong");
-      strong.textContent = item.title || "(无标题)";
-      const span = document.createElement("span");
-      span.textContent = `${item.author || ""} · ID ${id}`;
-      info.appendChild(strong);
-      info.appendChild(span);
-
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.textContent = "填入 ID";
-      btn.addEventListener("click", () => {
-        $("m-id").value = id;
-        $("meting-status").textContent = "已填入 ID，点「插入平台歌曲」";
-        $("meting-status").className = "ok";
-      });
-
-      row.appendChild(info);
-      row.appendChild(btn);
-      box.appendChild(row);
-    });
-  } catch (e) {
-    box.textContent = "搜索失败：" + e.message + "（第三方接口可能不稳定）";
+  const id = extractIdFromInput(v);
+  if (id) {
+    $("m-id").value = id;
+    st.textContent = `✅ 已提取 ID：${id}，点「插入平台歌曲」`;
+    st.style.color = "var(--ok)";
+  } else {
+    st.textContent = "没找到 ID，请检查链接里是否有 id=数字";
+    st.style.color = "var(--err)";
   }
 });
 
