@@ -108,6 +108,13 @@
   #meting-status{font-size:12px;}
   #meting-status.ok{color:var(--ok);}
   #meting-status.err{color:var(--err);}
+  /* 搜索结果列表 */
+  .search-results{display:flex;flex-direction:column;gap:6px;max-height:230px;overflow-y:auto;font-size:13px;}
+  .sr-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;}
+  .sr-item strong{display:block;color:var(--text);font-weight:600;font-size:13px;}
+  .sr-item span{color:var(--muted);font-size:12px;}
+  .sr-item button{padding:6px 10px;border:0;border-radius:6px;background:var(--primary);color:#fff;font-size:12px;cursor:pointer;white-space:nowrap;}
+  .sr-item button:hover{filter:brightness(1.1);}
   .ghost{background:transparent !important;color:var(--muted) !important;border:1px solid var(--line) !important;}
   /* ---------- 登录验证层 ---------- */
   .login{
@@ -260,6 +267,19 @@
           <span id="meting-status"></span>
         </div>
         <div class="music-hint">ID 怎么找：打开网易云歌曲页，地址里 <code>id=</code> 后面的那串数字就是。</div>
+
+        <!-- 搜索：找到歌后点「填入 ID」即可 -->
+        <div class="music-divider">搜索歌曲（自动填入 ID）</div>
+        <div class="row">
+          <div style="flex:3">
+            <label>关键词</label>
+            <input type="text" id="m-keyword" placeholder="歌名或歌手，例如：晴天">
+          </div>
+          <div style="flex:1;display:flex;align-items:flex-end">
+            <button type="button" class="tool-btn" id="btn-search-music" style="width:100%;height:38px">搜索</button>
+          </div>
+        </div>
+        <div class="search-results" id="search-results"></div>
       </div>
 
       <textarea id="body" placeholder="## 小标题&#10;&#10;直接写内容就行。"></textarea>
@@ -602,6 +622,62 @@ $("btn-insert-music").addEventListener("click", async () => {
     st.className = "err";
   } finally {
     btn.disabled = false;
+  }
+});
+
+// 从 Meting 返回的地址里提取歌曲 ID
+function extractId(url) {
+  const m = String(url).match(/[?&]id=(\d+)/);
+  return m ? m[1] : "";
+}
+
+// 搜索平台歌曲：结果显示为列表，点击「填入 ID」
+$("btn-search-music").addEventListener("click", async () => {
+  const kw = $("m-keyword").value.trim();
+  const box = $("search-results");
+  if (!kw) { box.textContent = "请输入关键词"; return; }
+
+  const server = $("m-server").value;
+  box.textContent = "搜索中……";
+
+  try {
+    const res = await fetch(
+      `https://api.i-meto.com/meting/api?server=${server}&type=search&keyword=${encodeURIComponent(kw)}`
+    );
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const list = await res.json();
+
+    box.innerHTML = "";
+    if (!list.length) { box.textContent = "没有找到结果"; return; }
+
+    list.slice(0, 10).forEach((item) => {
+      const id = extractId(item.url);
+      const row = document.createElement("div");
+      row.className = "sr-item";
+
+      const info = document.createElement("div");
+      const strong = document.createElement("strong");
+      strong.textContent = item.title || "(无标题)";
+      const span = document.createElement("span");
+      span.textContent = `${item.author || ""} · ID ${id}`;
+      info.appendChild(strong);
+      info.appendChild(span);
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = "填入 ID";
+      btn.addEventListener("click", () => {
+        $("m-id").value = id;
+        $("meting-status").textContent = "已填入 ID，点「插入平台歌曲」";
+        $("meting-status").className = "ok";
+      });
+
+      row.appendChild(info);
+      row.appendChild(btn);
+      box.appendChild(row);
+    });
+  } catch (e) {
+    box.textContent = "搜索失败：" + e.message + "（第三方接口可能不稳定）";
   }
 });
 
