@@ -117,9 +117,9 @@
 <div class="login" id="login">
   <div class="login-card">
     <h1>🔒 写作后台</h1>
-    <p>需要 GitHub Token 验证身份，只有仓库所有者能进入。</p>
-    <input type="password" id="login-token" placeholder="ghp_...">
-    <button id="login-btn">验证并进入</button>
+    <p>输入密码进入（仅限博主本人）。</p>
+    <input type="password" id="login-password" placeholder="密码">
+    <button id="login-btn">进入后台</button>
     <div id="login-status"></div>
   </div>
 </div>
@@ -186,63 +186,57 @@ let currentName = null;
 let currentSha = null;
 
 // ============================================================
-// Token 管理 + 身份验证
+// 密码验证 + Token 管理
 // ============================================================
-// 验证 Token 对应的 GitHub 账号；返回用户名，失败返回 null
-async function verifyToken(token) {
-  try {
-    const res = await fetch(`${API}/user`, {
-      headers: { Authorization: `token ${token}`, Accept: "application/vnd.github+json" }
-    });
-    if (!res.ok) return null;
-    const u = await res.json();
-    return u.login;
-  } catch (e) {
-    return null;
+// 密码的 SHA-256 摘要（源码里不放明文；哈希是单向的，输入后比对）
+const PASS_HASH = "ddafe4f7c213973a5e2b2d8c8a786b98f55fe3e572aa68ecb15466835b4dccf5";
+
+async function sha256(text) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+// 进入后台：隐藏登录层；如果之前存过 Token 就自动恢复
+function enterApp() {
+  const saved = localStorage.getItem("gh_token");
+  if (saved) {
+    $("token").value = saved;
+    $("tokenBox").classList.add("hidden");
+    loadList();
   }
-}
-
-// 验证通过：隐藏登录层，进入后台
-function enterApp(token) {
-  $("token").value = token;
-  $("tokenBox").classList.add("hidden");
   $("login").classList.add("hidden");
-  loadList();
 }
 
-// 登录按钮：验证通过才放行
+// 登录按钮：密码正确才放行
 async function tryLogin() {
-  const t = $("login-token").value.trim();
+  const pwd = $("login-password").value;
   const st = $("login-status");
-  if (!t) { st.textContent = "请输入 Token"; st.className = "err"; return; }
+  if (!pwd) { st.textContent = "请输入密码"; st.className = "err"; return; }
 
   $("login-btn").disabled = true;
   st.textContent = "验证中……";
   st.className = "";
 
-  const login = await verifyToken(t);
+  const ok = (await sha256(pwd)) === PASS_HASH;
   $("login-btn").disabled = false;
 
-  if (login === OWNER) {
-    localStorage.setItem("gh_token", t);
+  if (ok) {
+    localStorage.setItem("admin_auth", "1");   // 记住登录状态
     st.textContent = "验证通过";
     st.className = "ok";
-    enterApp(t);
-  } else if (login) {
-    st.textContent = `该 Token 属于 ${login}，不是本站所有者`;
-    st.className = "err";
+    enterApp();
   } else {
-    st.textContent = "Token 无效或已过期";
+    st.textContent = "密码错误";
     st.className = "err";
   }
 }
 
 $("login-btn").addEventListener("click", tryLogin);
-$("login-token").addEventListener("keydown", (e) => {
+$("login-password").addEventListener("keydown", (e) => {
   if (e.key === "Enter") tryLogin();
 });
 
-// 后台内仍可更换 Token（比如过期后）
+// 后台内更换 Token（发布文章时 GitHub API 需要它，但只存在本机浏览器）
 $("token").addEventListener("change", () => {
   localStorage.setItem("gh_token", $("token").value.trim());
   loadList();
@@ -492,18 +486,10 @@ function resetForm() {
 }
 
 // ============================================================
-// 初始化：有保存的 Token 就自动验证，否则显示登录层
+// 初始化：验证过就直接进入，否则停在登录页
 // ============================================================
-const savedToken = localStorage.getItem("gh_token");
-if (savedToken) {
-  verifyToken(savedToken).then((login) => {
-    if (login === OWNER) {
-      enterApp(savedToken);
-    } else {
-      // Token 不属于本站所有者，清掉并停在登录页
-      localStorage.removeItem("gh_token");
-    }
-  });
+if (localStorage.getItem("admin_auth") === "1") {
+  enterApp();
 }
 </script>
 </body>
