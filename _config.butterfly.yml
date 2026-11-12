@@ -481,7 +481,7 @@ inject:
       .music-pop{position:fixed;right:8px;top:45%;transform:translateY(-50%);z-index:9995;}
       .music-pop.hidden{display:none;}
       .mp-card{
-        position:relative;width:220px;padding:14px 12px 12px;
+        position:relative;width:200px;padding:12px 10px 10px;
         background:linear-gradient(160deg,#111a2e,#1b2b4a);
         border:1px solid rgba(255,255,255,.08);border-radius:16px;
         box-shadow:0 18px 50px rgba(0,0,0,.55);color:#e8eefc;text-align:center;
@@ -494,18 +494,18 @@ inject:
       .mp-close:hover{background:rgba(255,255,255,.16);color:#fff;}
       /* 黑胶唱片 */
       .mp-disc{
-        width:78px;height:78px;margin:4px auto 10px;border-radius:50%;
+        width:70px;height:70px;margin:4px auto 8px;border-radius:50%;
         background:#05070c;padding:7px;box-shadow:0 0 0 5px #0b1220, inset 0 0 18px rgba(0,0,0,.9);
         animation:mpSpin 8s linear infinite paused;
       }
       .mp-disc.playing{animation-play-state:running;}
       .mp-disc img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;}
       @keyframes mpSpin{to{transform:rotate(360deg);}}
-      .mp-title{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-      .mp-artist{font-size:10px;color:#8ea4c8;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+      .mp-title{font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+      .mp-artist{font-size:9px;color:#8ea4c8;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
       /* 歌词滚动区 */
       .mp-lyrics{
-        height:78px;overflow-y:auto;margin:8px 0 6px;position:relative;
+        height:72px;overflow-y:auto;margin:8px 0 6px;position:relative;
         mask-image:linear-gradient(180deg, transparent, #000 22%, #000 78%, transparent);
         -webkit-mask-image:linear-gradient(180deg, transparent, #000 22%, #000 78%, transparent);
         scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.25) transparent;
@@ -515,12 +515,12 @@ inject:
       .mp-lyrics::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.38);}
       .mp-lyrics::-webkit-scrollbar-track{background:transparent;}
       .mp-lrc-line{
-        font-size:10px;line-height:1.6;color:#6b7f9f;transition:color .2s;
+        font-size:9.5px;line-height:1.55;color:#6b7f9f;transition:color .2s;
         white-space:normal;word-break:break-word;overflow-wrap:anywhere;
         text-align:center;padding:0 2px;
       }
       .mp-lrc-line.active{color:#fff;font-weight:600;}
-      .mp-lrc-empty{font-size:10px;color:#5a6c8a;line-height:78px;}
+      .mp-lrc-empty{font-size:9.5px;color:#5a6c8a;line-height:72px;}
       /* 播放进度条 */
       .mp-progress{display:flex;align-items:center;gap:6px;padding:0 4px;margin-bottom:6px;}
       .mp-progress span{font-size:10px;color:#6b7f9f;width:30px;flex:none;text-align:center;}
@@ -564,7 +564,7 @@ inject:
       .mp-list-item.active{color:#4d9bfe;font-weight:600;}
       .mp-list-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
       .mp-list-artist{flex:none;opacity:.7;}
-      @media(max-width:768px){.music-pop{right:12px;bottom:80px;}.mp-card{width:220px;padding:14px 12px 12px;}.mp-disc{width:84px;height:84px;}.mp-lyrics{height:76px;}}
+      @media(max-width:768px){.music-pop{right:12px;bottom:80px;}.mp-card{width:200px;padding:12px 10px 10px;}.mp-disc{width:84px;height:84px;}.mp-lyrics{height:76px;}}
       </style>
       <script>
       (function(){
