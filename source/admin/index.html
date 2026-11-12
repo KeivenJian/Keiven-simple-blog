@@ -98,6 +98,16 @@
   #music-status{font-size:12px;}
   #music-status.ok{color:var(--ok);}
   #music-status.err{color:var(--err);}
+  .music-divider{border-top:1px solid var(--line);padding-top:14px;margin-top:4px;font-size:12px;color:var(--muted);}
+  .music-panel select{
+    width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--line);
+    background:var(--panel);color:var(--text);font-size:14px;outline:none;
+  }
+  .music-panel select:focus{border-color:var(--primary);}
+  .music-hint{font-size:11px;color:var(--muted);line-height:1.6;}
+  #meting-status{font-size:12px;}
+  #meting-status.ok{color:var(--ok);}
+  #meting-status.err{color:var(--err);}
   .ghost{background:transparent !important;color:var(--muted) !important;border:1px solid var(--line) !important;}
   /* ---------- 登录验证层 ---------- */
   .login{
@@ -218,6 +228,38 @@
           <button type="button" id="btn-cancel-music" class="ghost">取消</button>
           <span id="music-status"></span>
         </div>
+
+        <!-- 分隔：平台歌曲 -->
+        <div class="music-divider">或从音乐平台插入（不占仓库空间，但版权歌曲只有 30 秒试听）</div>
+
+        <div class="row">
+          <div>
+            <label>平台</label>
+            <select id="m-server">
+              <option value="netease">网易云音乐</option>
+              <option value="tencent">QQ 音乐</option>
+              <option value="kugou">酷狗音乐</option>
+              <option value="baidu">百度音乐</option>
+            </select>
+          </div>
+          <div>
+            <label>类型</label>
+            <select id="m-type">
+              <option value="song">单曲</option>
+              <option value="playlist">歌单</option>
+              <option value="album">专辑</option>
+            </select>
+          </div>
+          <div>
+            <label>歌曲 / 歌单 ID</label>
+            <input type="text" id="m-id" placeholder="如 1824045033">
+          </div>
+        </div>
+        <div class="actions">
+          <button type="button" id="btn-insert-meting">插入平台歌曲</button>
+          <span id="meting-status"></span>
+        </div>
+        <div class="music-hint">ID 怎么找：打开网易云歌曲页，地址里 <code>id=</code> 后面的那串数字就是。</div>
       </div>
 
       <textarea id="body" placeholder="## 小标题&#10;&#10;直接写内容就行。"></textarea>
@@ -561,6 +603,22 @@ $("btn-insert-music").addEventListener("click", async () => {
   } finally {
     btn.disabled = false;
   }
+});
+
+// 插入平台歌曲（Meting）：生成 {% meting "ID" "平台" "类型" %}
+$("btn-insert-meting").addEventListener("click", () => {
+  const st = $("meting-status");
+  const id = $("m-id").value.trim();
+  if (!id) { st.textContent = "请输入歌曲/歌单 ID"; st.className = "err"; return; }
+
+  const server = $("m-server").value;
+  const type = $("m-type").value;
+  const tag = `{% meting "${id}" "${server}" "${type}" %}`;
+
+  insertAtCursor(tag);
+  st.textContent = "✅ 已插入到正文";
+  st.className = "ok";
+  $("m-id").value = "";
 });
 
 // ============================================================
