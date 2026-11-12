@@ -7,4 +7,6 @@ categories:
   - 日常
 ---
 
-音乐功能测试2.0小文件{% aplayer "From The Start" "Laufey" "/music/Laufey - From The Start.mp3" "/images/ed0be46658aa0c501b8d0b9e645feb44.jpg" "lrc:/music/Laufey - From The Start.lrc" %}
+音乐功能测试2.0（小文件）
+
+{% aplayer "From The Start" "Laufey" "/music/Laufey - From The Start.mp3" "/images/ed0be46658aa0c501b8d0b9e645feb44.jpg" "lrc:https://keivenblog.me/music/Laufey - From The Start.lrc" %}
