@@ -141,3 +141,10 @@ excerpt:
   excerpt_excludes: []    # 不参与摘要的选择器
   more_excludes: []
   hideWholePostExcerpts: false
+
+# 音乐播放器（hexo-tag-aplayer）
+# meting: true 开启 MetingJS：
+#   文章里用 {% meting "歌曲ID" "netease" "song" %} 就能播网易云等平台的歌，
+#   音频从平台/代理流式加载，不占仓库空间
+aplayer:
+  meting: true
