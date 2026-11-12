@@ -1130,7 +1130,7 @@ $("btn-log").addEventListener("click", async () => {
   $("log-modal").classList.remove("hidden");
   $("log-content").textContent = "加载中……";
   try {
-    const data = await api(`contents/source/log/index.md`);
+    const data = await api(`contents/source/_drafts/${encodeURIComponent("更新日志.md")}`);
     $("log-content").textContent = fromBase64(data.content);
   } catch (e) {
     $("log-content").textContent = `加载失败：${e.message}`;
