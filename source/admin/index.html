@@ -270,7 +270,7 @@
 <div class="modal hidden" id="log-modal">
   <div class="modal-box">
     <div class="modal-head">
-      <span>📜 更新日志</span>
+      <span>📜 最新日志</span>
       <button type="button" id="btn-log-close">×</button>
     </div>
     <pre id="log-content" class="modal-body">加载中……</pre>
@@ -282,7 +282,7 @@
   <div class="side-head">
     <h1>📝 写作后台</h1>
     <button id="btn-new">+ 新建文章</button>
-    <button id="btn-log" class="ghost-btn">📜 更新日志</button>
+    <button id="btn-log" class="ghost-btn">📜 最新日志</button>
   </div>
   <div class="side-search">
     <input type="text" id="search-input" placeholder="搜索标题或分类">
@@ -1135,14 +1135,26 @@ $("btn-delete").addEventListener("click", async () => {
 $("btn-new").addEventListener("click", resetForm);
 
 // ============================================================
-// 更新日志弹窗：读取 /log/ 页面的源文件并显示
+// 最新日志弹窗：读取日志文章，只显示最近一天的内容
 // ============================================================
 $("btn-log").addEventListener("click", async () => {
   $("log-modal").classList.remove("hidden");
   $("log-content").textContent = "加载中……";
   try {
     const data = await api(`contents/source/_drafts/${encodeURIComponent("更新日志.md")}`);
-    $("log-content").textContent = fromBase64(data.content);
+    const text = fromBase64(data.content);
+
+    // 去掉 front-matter
+    const body = text.replace(/^---[\s\S]*?\n---\r?\n?/, "");
+
+    // 只取最新一节：第一个 "## " 到下一个 "## " 之间
+    const first = body.indexOf("## ");
+    let latest = body.trim();
+    if (first >= 0) {
+      const next = body.indexOf("## ", first + 3);
+      latest = (next >= 0 ? body.slice(first, next) : body.slice(first)).trim();
+    }
+    $("log-content").textContent = latest || "暂无日志";
   } catch (e) {
     $("log-content").textContent = `加载失败：${e.message}`;
   }
