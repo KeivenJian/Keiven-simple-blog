@@ -562,10 +562,10 @@ inject:
       .mp-lrc-line.active{color:#fff;font-weight:600;}
       .mp-lrc-empty{font-size:9.5px;color:#5a6c8a;line-height:72px;}
       /* 播放进度条 */
-      .mp-progress{display:flex;align-items:center;gap:6px;padding:0 4px;margin-bottom:6px;}
-      .mp-progress span{font-size:10px;color:#6b7f9f;width:30px;flex:none;text-align:center;}
+      .mp-progress{display:flex;align-items:center;gap:6px;padding:0 8px;margin-bottom:6px;}
+      .mp-progress span{font-size:9.5px;color:#6b7f9f;width:28px;flex:none;text-align:center;}
       .mp-progress input[type=range]{
-        flex:1;height:3px;-webkit-appearance:none;appearance:none;
+        flex:1;min-width:0;height:3px;-webkit-appearance:none;appearance:none;
         background:rgba(255,255,255,.15);border-radius:2px;outline:none;cursor:pointer;
       }
       .mp-progress input[type=range]::-webkit-slider-thumb{
@@ -575,7 +575,7 @@ inject:
       .mp-volume{display:flex;align-items:center;gap:8px;padding:0 6px;margin-bottom:8px;}
       .mp-vol-icon{font-size:11px;color:#8ea4c8;}
       .mp-volume input[type=range]{
-        flex:1;height:3px;-webkit-appearance:none;appearance:none;background:rgba(255,255,255,.15);
+        flex:1;min-width:0;height:3px;-webkit-appearance:none;appearance:none;background:rgba(255,255,255,.15);
         border-radius:2px;outline:none;cursor:pointer;
       }
       .mp-volume input[type=range]::-webkit-slider-thumb{
