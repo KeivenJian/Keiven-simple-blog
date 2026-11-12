@@ -478,7 +478,7 @@ inject:
         </div>
       </div>
       <style>
-      .music-pop{position:fixed;right:24px;bottom:90px;z-index:9995;}
+      .music-pop{position:fixed;right:24px;top:50%;transform:translateY(-50%);z-index:9995;}
       .music-pop.hidden{display:none;}
       .mp-card{
         position:relative;width:280px;padding:18px 16px 14px;
@@ -685,6 +685,41 @@ inject:
               if (ap.audio.paused) ap.play(); else ap.pause();
             });
 
+            // 记住当前歌曲和播放位置，切页面后尝试续播
+            function saveTrack(){
+              try {
+                if (!ap || !ap.audio) return;
+                var list = ap.list.audios || [];
+                var idx = ap.list.index || 0;
+                var a = list[idx] || {};
+                localStorage.setItem('music-pop-track', JSON.stringify({
+                  url: a.url || a.audio || '',
+                  time: ap.audio.currentTime || 0,
+                  playing: !ap.audio.paused
+                }));
+              } catch (e) {}
+            }
+            setInterval(saveTrack, 1000);
+            if (ap.audio) ap.audio.addEventListener('timeupdate', saveTrack);
+
+            // 页面加载后：如果上次在放歌，且当前页面有同一首，续上位置
+            (function restoreTrack(){
+              try {
+                var saved = JSON.parse(localStorage.getItem('music-pop-track') || 'null');
+                if (!saved || !saved.url || !saved.playing) return;
+                var audios = ap.list.audios || [];
+                var idx = -1;
+                for (var i = 0; i < audios.length; i++) {
+                  var u = audios[i].url || audios[i].audio || '';
+                  if (u === saved.url) { idx = i; break; }
+                }
+                if (idx < 0) return;   // 当前页面没有这首歌，就不续播
+                if (ap.list.index !== idx) ap.list.switch(idx);
+                ap.audio.currentTime = saved.time || 0;
+                try { ap.play(); } catch (e) {}
+              } catch (e) {}
+            })();
+
             // 进入页面自动播放；浏览器通常会拦截，拦截后等用户第一次点击/触摸再播
             function tryPlay(){
               if (!ap || !ap.audio || !ap.audio.paused) return;
@@ -789,6 +824,7 @@ inject:
               try {
                 var saved = JSON.parse(localStorage.getItem('music-pop-pos') || 'null');
                 if (saved && typeof saved.left === 'number') {
+                  pop.style.transform = 'none';
                   pop.style.right = 'auto';
                   pop.style.bottom = 'auto';
                   pop.style.left = saved.left + 'px';
@@ -814,6 +850,7 @@ inject:
                 var ny = drag.oy + e.clientY - drag.sy;
                 nx = Math.max(0, Math.min(window.innerWidth - card.offsetWidth, nx));
                 ny = Math.max(0, Math.min(window.innerHeight - card.offsetHeight, ny));
+                pop.style.transform = 'none';
                 pop.style.right = 'auto';
                 pop.style.bottom = 'auto';
                 pop.style.left = nx + 'px';
