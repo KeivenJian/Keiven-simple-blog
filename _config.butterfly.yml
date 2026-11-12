@@ -596,11 +596,28 @@ inject:
             if (ap.audio && document.activeElement !== vol) vol.value = ap.audio.volume;
           }
 
+          // 把 LRC 时间字符串 "00:12.34" 转成秒
+          function lrcTime(t){
+            var m = String(t).match(/(\d+):(\d+)(?:\.(\d+))?/);
+            if (!m) return 0;
+            return parseInt(m[1], 10) * 60 + parseInt(m[2], 10) + (m[3] ? parseFloat('0.' + m[3]) : 0);
+          }
+
+          // 取当前歌曲的歌词数组（APlayer 1.x 用 lrc.current，格式 [[时间, 文本], ...]）
+          function getLrcLines(){
+            var lrc = ap && ap.lrc;
+            if (!lrc) return [];
+            if (Array.isArray(lrc.current) && lrc.current.length) return lrc.current;
+            if (lrc.parsed && lrc.index != null && Array.isArray(lrc.parsed[lrc.index])) {
+              return lrc.parsed[lrc.index];
+            }
+            return [];
+          }
+
           // 歌词：按当前时间高亮并滚动
           function renderLyrics(){
             if (!ap) return;
-            var lrc = ap.lrc;
-            var lines = (lrc && lrc.lines) || [];
+            var lines = getLrcLines();
 
             if (!lines.length) {
               lyricsEl.innerHTML = '<div class="mp-lrc-empty">暂无歌词</div>';
@@ -608,14 +625,14 @@ inject:
             }
 
             // 歌词变了（切歌）才重建 DOM
-            var sig = lines.length + '|' + (lines[0].text || '');
+            var sig = lines.length + '|' + String(lines[0][1] || '');
             if (lyricsEl.dataset.sig !== sig) {
               lyricsEl.innerHTML = '';
               lines.forEach(function(line, i){
                 var d = document.createElement('div');
                 d.className = 'mp-lrc-line';
                 d.dataset.index = i;
-                d.textContent = line.text || '';
+                d.textContent = line[1] || '';
                 lyricsEl.appendChild(d);
               });
               lyricsEl.dataset.sig = sig;
@@ -624,7 +641,7 @@ inject:
             var t = (ap.audio && ap.audio.currentTime) || 0;
             var idx = 0;
             for (var i = 0; i < lines.length; i++) {
-              if (lines[i].time <= t) idx = i; else break;
+              if (lrcTime(lines[i][0]) <= t) idx = i; else break;
             }
             var els = lyricsEl.children;
             for (var j = 0; j < els.length; j++) {
