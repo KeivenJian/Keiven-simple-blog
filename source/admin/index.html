@@ -54,10 +54,19 @@
     scrollbar-color:rgba(142,164,200,.45) transparent;
   }
   .item{
+    display:flex;align-items:center;justify-content:space-between;gap:6px;
     padding:10px 12px;border-radius:8px;font-size:13px;cursor:pointer;
-    color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-    margin-bottom:2px;
+    color:var(--muted);margin-bottom:2px;
   }
+  .item-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  /* 列表项右侧的删除按钮：默认透明，悬停出现 */
+  .item-del{
+    flex:none;width:22px;height:22px;border:0;border-radius:6px;
+    background:transparent;color:var(--muted);font-size:15px;line-height:1;cursor:pointer;
+    opacity:0;transition:.15s;
+  }
+  .item:hover .item-del{opacity:1;}
+  .item-del:hover{background:rgba(255,107,129,.15);color:var(--err);}
   .item:hover{background:var(--panel-2);color:var(--text);}
   .item.active{background:var(--panel-2);color:#fff;box-shadow:inset 3px 0 0 var(--primary);}
   /* ---------- 右侧编辑区 ---------- */
@@ -176,6 +185,7 @@
     main{padding:16px;overflow:visible;}
     .main-scroll{overflow:visible;}
     textarea{height:auto;min-height:260px;}
+    .item-del{opacity:1;}   /* 手机没有悬停，删除按钮常显 */
   }
 </style>
 </head>
@@ -463,13 +473,58 @@ async function loadList() {
       .forEach((f) => {
         const div = document.createElement("div");
         div.className = "item";
-        div.textContent = f.name.replace(/\.md$/, "");
         div.dataset.name = f.name;
+
+        const nameEl = document.createElement("span");
+        nameEl.className = "item-name";
+        nameEl.textContent = f.name.replace(/\.md$/, "");
+
+        // 列表内直接删除，不用先打开文章
+        const del = document.createElement("button");
+        del.type = "button";
+        del.className = "item-del";
+        del.textContent = "×";
+        del.title = "删除这篇文章";
+        del.addEventListener("click", (e) => {
+          e.stopPropagation();     // 别触发「打开文章」
+          deletePost(f.name);
+        });
+
+        div.appendChild(nameEl);
+        div.appendChild(del);
         div.addEventListener("click", () => openPost(f.name));
         listEl.appendChild(div);
       });
   } catch (e) {
     listEl.innerHTML = `<div class="item">加载失败：${e.message}</div>`;
+  }
+}
+
+// ============================================================
+// 删除文章（列表内直接删）
+// ============================================================
+async function deletePost(name) {
+  if (!confirm(`确定删除《${name.replace(/\.md$/, "")}》？\n\n删除后 1-2 分钟线上才消失，且无法撤销。`)) return;
+
+  try {
+    // 删除文件必须先拿到它的 sha
+    const data = await api(`contents/${POSTS_DIR}/${encodeURIComponent(name)}`);
+    await api(`contents/${POSTS_DIR}/${encodeURIComponent(name)}`, {
+      method: "DELETE",
+      body: JSON.stringify({
+        message: `delete: ${name}`,
+        sha: data.sha,
+        branch: "main"
+      })
+    });
+
+    // 删的正好是当前编辑的文章，就清空表单
+    if (currentName === name) resetForm();
+
+    setStatus(`已删除：${name.replace(/\.md$/, "")}`, "ok");
+    loadList();
+  } catch (e) {
+    setStatus(`删除失败：${e.message}`, "err");
   }
 }
 
