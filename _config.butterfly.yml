@@ -208,6 +208,7 @@ inject:
 
         var hideBtn = document.getElementById('pet-hide');
         if (hideBtn) {
+          hideBtn.addEventListener('pointerdown', function(e){ e.stopPropagation(); });
           hideBtn.addEventListener('click', function(e){
             e.stopPropagation();
             e.preventDefault();
@@ -272,11 +273,12 @@ inject:
           if(e.button!==undefined && e.button!==0)return; // 只响应左键
           dragging=true;moved=false;
           startX=e.clientX;startY=e.clientY;
+          // 先关掉 hover 缩放（transform:none）再量尺寸，否则拿到的是放大后的坐标
+          pet.classList.add('dragging');
           var r=pet.getBoundingClientRect();
           startLeft=r.left;startTop=r.top;
           pet.style.right='auto';pet.style.bottom='auto';
           pet.style.left=startLeft+'px';pet.style.top=startTop+'px';
-          pet.classList.add('dragging');
           try{pet.setPointerCapture(e.pointerId);}catch(err){} // 锁定指针，拖出元素也能继续拖
           e.preventDefault();
         });
