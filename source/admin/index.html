@@ -53,20 +53,32 @@
     scrollbar-width:thin;
     scrollbar-color:rgba(142,164,200,.45) transparent;
   }
+  .side-search{padding:0 12px 10px;}
+  .side-search input{
+    width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--line);
+    background:var(--bg);color:var(--text);font-size:12px;outline:none;
+  }
+  .side-search input:focus{border-color:var(--primary);}
+
   .item{
-    display:flex;align-items:center;justify-content:space-between;gap:6px;
-    padding:10px 12px;border-radius:8px;font-size:13px;cursor:pointer;
+    display:flex;align-items:center;gap:4px;
+    padding:8px 10px;border-radius:8px;font-size:13px;cursor:pointer;
     color:var(--muted);margin-bottom:2px;
   }
+  .item-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;}
   .item-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  /* 列表项右侧的删除按钮：默认透明，悬停出现 */
-  .item-del{
+  .item-cat{font-size:11px;color:var(--muted);opacity:.75;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  /* 隐藏的文章：淡化 + 删除线 */
+  .item.hidden-post .item-name{opacity:.5;text-decoration:line-through;}
+  /* 列表项右侧的小按钮（隐藏 / 删除），悬停出现 */
+  .item-btn{
     flex:none;width:22px;height:22px;border:0;border-radius:6px;
-    background:transparent;color:var(--muted);font-size:15px;line-height:1;cursor:pointer;
+    background:transparent;color:var(--muted);font-size:13px;line-height:1;cursor:pointer;
     opacity:0;transition:.15s;
   }
-  .item:hover .item-del{opacity:1;}
-  .item-del:hover{background:rgba(255,107,129,.15);color:var(--err);}
+  .item:hover .item-btn{opacity:1;}
+  .item-btn:hover{background:rgba(255,255,255,.08);}
+  .item-btn.del:hover{background:rgba(255,107,129,.15);color:var(--err);}
   .item:hover{background:var(--panel-2);color:var(--text);}
   .item.active{background:var(--panel-2);color:#fff;box-shadow:inset 3px 0 0 var(--primary);}
   /* ---------- 右侧编辑区 ---------- */
@@ -185,7 +197,7 @@
     main{padding:16px;overflow:visible;}
     .main-scroll{overflow:visible;}
     textarea{height:auto;min-height:260px;}
-    .item-del{opacity:1;}   /* 手机没有悬停，删除按钮常显 */
+    .item-btn{opacity:1;}   /* 手机没有悬停，按钮常显 */
   }
 </style>
 </head>
@@ -207,6 +219,9 @@
   <div class="side-head">
     <h1>📝 写作后台</h1>
     <button id="btn-new">+ 新建文章</button>
+  </div>
+  <div class="side-search">
+    <input type="text" id="search-input" placeholder="搜索标题或分类">
   </div>
   <div id="list"></div>
 </aside>
@@ -339,6 +354,7 @@ const OWNER = "KeivenJian";
 const REPO = "Keiven-simple-blog";
 const API = "https://api.github.com";
 const POSTS_DIR = "source/_posts";
+const DRAFTS_DIR = "source/_drafts";
 
 const $ = (id) => document.getElementById(id);
 const statusEl = $("status");
@@ -468,43 +484,155 @@ async function loadList() {
   const listEl = $("list");
   listEl.innerHTML = '<div class="item">加载中……</div>';
   try {
-    const items = await api(`contents/${POSTS_DIR}`);
+    // 同时读取「已发布」和「草稿（隐藏）」两个目录
+    const [published, drafts] = await Promise.all([
+      api(`contents/${POSTS_DIR}`).catch(() => []),
+      api(`contents/${DRAFTS_DIR}`).catch(() => [])
+    ]);
     $("tokenBox").classList.add("hidden");   // Token 有效：收起输入框
-    listEl.innerHTML = "";
-    if (!items.length) {
+
+    const pubFiles = (published || [])
+      .filter((f) => f.name.endsWith(".md"))
+      .map((f) => ({ name: f.name, hidden: false }));
+    const draftFiles = (drafts || [])
+      .filter((f) => f.name.endsWith(".md"))
+      .map((f) => ({ name: f.name, hidden: true }));
+    const files = pubFiles.concat(draftFiles);
+
+    if (!files.length) {
       listEl.innerHTML = '<div class="item">还没有文章</div>';
       return;
     }
-    items
-      .filter((f) => f.name.endsWith(".md"))
-      .sort((a, b) => b.name.localeCompare(a.name))
-      .forEach((f) => {
-        const div = document.createElement("div");
-        div.className = "item";
-        div.dataset.name = f.name;
 
-        const nameEl = document.createElement("span");
-        nameEl.className = "item-name";
-        nameEl.textContent = f.name.replace(/\.md$/, "");
+    // 并行读取每篇文章的分类
+    const metas = await Promise.all(
+      files.map(async (f) => {
+        try {
+          const dir = f.hidden ? DRAFTS_DIR : POSTS_DIR;
+          const data = await api(`contents/${dir}/${encodeURIComponent(f.name)}`);
+          const { meta } = parseFrontMatter(fromBase64(data.content));
+          return {
+            name: f.name,
+            category: (meta.categories || [])[0] || "",
+            hide: f.hidden
+          };
+        } catch (e) {
+          return { name: f.name, category: "", hide: f.hidden };
+        }
+      })
+    );
 
-        // 列表内直接删除，不用先打开文章
-        const del = document.createElement("button");
-        del.type = "button";
-        del.className = "item-del";
-        del.textContent = "×";
-        del.title = "删除这篇文章";
-        del.addEventListener("click", (e) => {
-          e.stopPropagation();     // 别触发「打开文章」
-          deletePost(f.name);
-        });
-
-        div.appendChild(nameEl);
-        div.appendChild(del);
-        div.addEventListener("click", () => openPost(f.name));
-        listEl.appendChild(div);
-      });
+    metas.sort((a, b) => b.name.localeCompare(a.name));
+    listEl.innerHTML = "";
+    metas.forEach(renderItem);
+    applySearch();
   } catch (e) {
     listEl.innerHTML = `<div class="item">加载失败：${e.message}</div>`;
+  }
+}
+
+// 渲染一个文章条目：标题 + 分类 + 隐藏/删除按钮
+function renderItem(m) {
+  const div = document.createElement("div");
+  div.className = "item" + (m.hide ? " hidden-post" : "");
+  div.dataset.name = m.name;
+  div.dataset.category = m.category || "";
+
+  const main = document.createElement("div");
+  main.className = "item-main";
+  const nameEl = document.createElement("span");
+  nameEl.className = "item-name";
+  nameEl.textContent = m.name.replace(/\.md$/, "");
+  const catEl = document.createElement("span");
+  catEl.className = "item-cat";
+  catEl.textContent = m.category || "未分类";
+  main.appendChild(nameEl);
+  main.appendChild(catEl);
+
+  // 眼睛按钮：切换隐藏 / 显示
+  const eye = document.createElement("button");
+  eye.type = "button";
+  eye.className = "item-btn eye";
+  eye.textContent = m.hide ? "🙈" : "👁";
+  eye.title = m.hide ? "当前已隐藏，点击显示" : "点击隐藏（首页/归档不再显示）";
+  eye.addEventListener("click", (e) => {
+    e.stopPropagation();
+    toggleHide(m.name, m.hide);
+  });
+
+  // 删除按钮
+  const del = document.createElement("button");
+  del.type = "button";
+  del.className = "item-btn del";
+  del.textContent = "×";
+  del.title = "删除这篇文章";
+  del.addEventListener("click", (e) => {
+    e.stopPropagation();
+    deletePost(m.name);
+  });
+
+  div.appendChild(main);
+  div.appendChild(eye);
+  div.appendChild(del);
+  div.addEventListener("click", () => openPost(m.name));
+  $("list").appendChild(div);
+}
+
+// 搜索：按标题和分类过滤列表
+function applySearch() {
+  const kw = ($("search-input").value || "").trim().toLowerCase();
+  document.querySelectorAll("#list .item").forEach((el) => {
+    const text = (el.dataset.name + " " + (el.dataset.category || "")).toLowerCase();
+    el.style.display = !kw || text.includes(kw) ? "" : "none";
+  });
+}
+$("search-input").addEventListener("input", applySearch);
+
+// 隐藏 / 显示文章：在 source/_posts 和 source/_drafts 之间移动文件
+// 草稿目录不会被 Hexo 编译，所以隐藏的文章既不在首页也不生成页面
+async function toggleHide(name, isHidden) {
+  try {
+    const fromDir = isHidden ? DRAFTS_DIR : POSTS_DIR;
+    const toDir = isHidden ? POSTS_DIR : DRAFTS_DIR;
+
+    // 读取原文件内容（base64 原样搬运）
+    const data = await api(`contents/${fromDir}/${encodeURIComponent(name)}`);
+    const content = String(data.content || "").replace(/\n/g, "");
+
+    // 目标位置若已有同名文件，带上它的 sha 才能覆盖
+    let targetSha = null;
+    try {
+      const existing = await api(`contents/${toDir}/${encodeURIComponent(name)}`);
+      targetSha = existing.sha;
+    } catch (e) { /* 不存在，正常新建 */ }
+
+    const payload = {
+      message: `${isHidden ? "show" : "hide"}: ${name}`,
+      content,
+      branch: "main"
+    };
+    if (targetSha) payload.sha = targetSha;
+
+    // 先写入目标目录
+    await api(`contents/${toDir}/${encodeURIComponent(name)}`, {
+      method: "PUT",
+      body: JSON.stringify(payload)
+    });
+
+    // 再删除原文件
+    await api(`contents/${fromDir}/${encodeURIComponent(name)}`, {
+      method: "DELETE",
+      body: JSON.stringify({
+        message: `${isHidden ? "show" : "hide"}: ${name}`,
+        sha: data.sha,
+        branch: "main"
+      })
+    });
+
+    setStatus(isHidden ? "已显示（重新发布）" : "已隐藏（移到草稿，不参与构建）", "ok");
+    loadList();
+  } catch (e) {
+    setStatus(`操作失败：${e.message}`, "err");
   }
 }
 
