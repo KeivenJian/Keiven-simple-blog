@@ -789,6 +789,11 @@ async function deletePost(name, isHidden) {
     // 删的正好是当前编辑的文章，就清空表单
     if (currentName === name) resetForm();
 
+    // 立即从列表移除，不用等整体刷新
+    const el = Array.from(document.querySelectorAll("#list .item"))
+      .find((n) => n.dataset.name === name);
+    if (el) el.remove();
+
     setStatus(`已删除：${name.replace(/\.md$/, "")}`, "ok");
     loadList();
   } catch (e) {
