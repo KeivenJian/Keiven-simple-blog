@@ -596,28 +596,17 @@ inject:
             if (ap.audio && document.activeElement !== vol) vol.value = ap.audio.volume;
           }
 
-          // 把 LRC 时间字符串 "00:12.34" 转成秒
-          function lrcTime(t){
-            var m = String(t).match(/(\d+):(\d+)(?:\.(\d+))?/);
-            if (!m) return 0;
-            return parseInt(m[1], 10) * 60 + parseInt(m[2], 10) + (m[3] ? parseFloat('0.' + m[3]) : 0);
-          }
-
-          // 取当前歌曲的歌词数组（APlayer 1.x 用 lrc.current，格式 [[时间, 文本], ...]）
-          function getLrcLines(){
-            var lrc = ap && ap.lrc;
-            if (!lrc) return [];
-            if (Array.isArray(lrc.current) && lrc.current.length) return lrc.current;
-            if (lrc.parsed && lrc.index != null && Array.isArray(lrc.parsed[lrc.index])) {
-              return lrc.parsed[lrc.index];
-            }
-            return [];
-          }
-
-          // 歌词：按当前时间高亮并滚动
+          // 歌词：直接读 APlayer 渲染好的歌词 DOM（它自己维护当前行高亮）
           function renderLyrics(){
             if (!ap) return;
-            var lines = getLrcLines();
+
+            var ps = document.querySelectorAll('.aplayer-lrc-contents p');
+            var lines = [];
+            var curIdx = -1;
+            for (var i = 0; i < ps.length; i++) {
+              lines.push(ps[i].textContent || '');
+              if (ps[i].classList.contains('aplayer-lrc-current')) curIdx = i;
+            }
 
             if (!lines.length) {
               lyricsEl.innerHTML = '<div class="mp-lrc-empty">暂无歌词</div>';
@@ -625,31 +614,28 @@ inject:
             }
 
             // 歌词变了（切歌）才重建 DOM
-            var sig = lines.length + '|' + String(lines[0][1] || '');
+            var sig = lines.length + '|' + lines[0];
             if (lyricsEl.dataset.sig !== sig) {
               lyricsEl.innerHTML = '';
-              lines.forEach(function(line, i){
+              lines.forEach(function(txt, k){
                 var d = document.createElement('div');
                 d.className = 'mp-lrc-line';
-                d.dataset.index = i;
-                d.textContent = line[1] || '';
+                d.dataset.index = k;
+                d.textContent = txt;
                 lyricsEl.appendChild(d);
               });
               lyricsEl.dataset.sig = sig;
             }
 
-            var t = (ap.audio && ap.audio.currentTime) || 0;
-            var idx = 0;
-            for (var i = 0; i < lines.length; i++) {
-              if (lrcTime(lines[i][0]) <= t) idx = i; else break;
-            }
+            // 高亮当前行（用 APlayer 自己算好的索引）
+            var idx = curIdx >= 0 ? curIdx : 0;
             var els = lyricsEl.children;
             for (var j = 0; j < els.length; j++) {
               els[j].classList.toggle('active', j === idx);
             }
+
             var activeEl = els[idx];
             if (activeEl) {
-              // 让当前行尽量居中（相对歌词容器计算，兼容不同浏览器）
               var target = activeEl.offsetTop - lyricsEl.clientHeight / 2 + activeEl.clientHeight / 2;
               if (Math.abs(lyricsEl.scrollTop - target) > 2) {
                 lyricsEl.scrollTop = Math.max(0, target);
