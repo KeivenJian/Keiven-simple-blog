@@ -428,9 +428,10 @@ const DRAFTS_DIR = "source/_drafts";
 const $ = (id) => document.getElementById(id);
 const statusEl = $("status");
 
-// 当前正在编辑的文件名（null 表示新建）
+// 当前正在编辑的文件名（null 表示新建）及其所在目录
 let currentName = null;
 let currentSha = null;
+let currentDir = null;   // POSTS_DIR 或 DRAFTS_DIR
 
 // ============================================================
 // 密码验证 + Token 管理
@@ -674,13 +675,13 @@ function renderItem(m, parent) {
   del.title = "删除这篇文章";
   del.addEventListener("click", (e) => {
     e.stopPropagation();
-    deletePost(m.name);
+    deletePost(m.name, m.hide);
   });
 
   div.appendChild(main);
   div.appendChild(eye);
   div.appendChild(del);
-  div.addEventListener("click", () => openPost(m.name));
+  div.addEventListener("click", () => openPost(m.name, m.hide));
   parent.appendChild(div);
 }
 
@@ -769,13 +770,14 @@ async function toggleHide(name, isHidden) {
 // ============================================================
 // 删除文章（列表内直接删）
 // ============================================================
-async function deletePost(name) {
+async function deletePost(name, isHidden) {
   if (!confirm(`确定删除《${name.replace(/\.md$/, "")}》？\n\n删除后 1-2 分钟线上才消失，且无法撤销。`)) return;
 
   try {
+    const dir = isHidden ? DRAFTS_DIR : POSTS_DIR;
     // 删除文件必须先拿到它的 sha
-    const data = await api(`contents/${POSTS_DIR}/${encodeURIComponent(name)}`);
-    await api(`contents/${POSTS_DIR}/${encodeURIComponent(name)}`, {
+    const data = await api(`contents/${dir}/${encodeURIComponent(name)}`);
+    await api(`contents/${dir}/${encodeURIComponent(name)}`, {
       method: "DELETE",
       body: JSON.stringify({
         message: `delete: ${name}`,
@@ -797,10 +799,11 @@ async function deletePost(name) {
 // ============================================================
 // 打开文章
 // ============================================================
-async function openPost(name) {
+async function openPost(name, isHidden) {
   setStatus("加载中……", "");
   try {
-    const data = await api(`contents/${POSTS_DIR}/${encodeURIComponent(name)}`);
+    const dir = isHidden ? DRAFTS_DIR : POSTS_DIR;
+    const data = await api(`contents/${dir}/${encodeURIComponent(name)}`);
     const text = fromBase64(data.content);
     const { meta, body } = parseFrontMatter(text);
 
@@ -811,6 +814,7 @@ async function openPost(name) {
 
     currentName = name;
     currentSha = data.sha;
+    currentDir = dir;
     $("btn-delete").disabled = false;
     document.querySelectorAll(".item").forEach((el) => {
       el.classList.toggle("active", el.dataset.name === name);
@@ -1072,7 +1076,8 @@ $("btn-save").addEventListener("click", async () => {
     };
     if (currentSha) payload.sha = currentSha;
 
-    const res = await api(`contents/${POSTS_DIR}/${encodeURIComponent(name)}`, {
+    const saveDir = currentDir || POSTS_DIR;
+    const res = await api(`contents/${saveDir}/${encodeURIComponent(name)}`, {
       method: "PUT",
       body: JSON.stringify(payload)
     });
@@ -1101,7 +1106,8 @@ $("btn-delete").addEventListener("click", async () => {
   setStatus("正在删除……", "");
 
   try {
-    await api(`contents/${POSTS_DIR}/${encodeURIComponent(currentName)}`, {
+    const delDir = currentDir || POSTS_DIR;
+    await api(`contents/${delDir}/${encodeURIComponent(currentName)}`, {
       method: "DELETE",
       body: JSON.stringify({
         message: `delete: ${currentName}`,
@@ -1143,6 +1149,7 @@ $("btn-log-close").addEventListener("click", () => {
 function resetForm() {
   currentName = null;
   currentSha = null;
+  currentDir = null;
   $("title").value = "";
   $("tags").value = "";
   $("category").value = "";
