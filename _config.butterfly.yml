@@ -779,6 +779,58 @@ inject:
             try { ap.on('listswitch', function(){ update(); renderLyrics(); renderList(); }); } catch (e) {}
             try { ap.on('loadeddata', function(){ update(); renderLyrics(); }); } catch (e) {}
 
+            // ---- 弹窗拖动：按住卡片空白处拖动，位置会记住 ----
+            (function setupDrag(){
+              var card = pop.querySelector('.mp-card');
+              if (!card) return;
+              var drag = { active: false, sx: 0, sy: 0, ox: 0, oy: 0 };
+
+              // 恢复上次位置
+              try {
+                var saved = JSON.parse(localStorage.getItem('music-pop-pos') || 'null');
+                if (saved && typeof saved.left === 'number') {
+                  pop.style.right = 'auto';
+                  pop.style.bottom = 'auto';
+                  pop.style.left = saved.left + 'px';
+                  pop.style.top = saved.top + 'px';
+                }
+              } catch (e) {}
+
+              card.addEventListener('pointerdown', function(e){
+                // 按钮、输入、歌词、列表区域不触发拖动
+                if (e.target.closest('button, input, .mp-lyrics, .mp-list')) return;
+                drag.active = true;
+                drag.sx = e.clientX; drag.sy = e.clientY;
+                var r = card.getBoundingClientRect();
+                drag.ox = r.left; drag.oy = r.top;
+                try { card.setPointerCapture(e.pointerId); } catch (err) {}
+                card.style.cursor = 'grabbing';
+                e.preventDefault();
+              });
+
+              card.addEventListener('pointermove', function(e){
+                if (!drag.active) return;
+                var nx = drag.ox + e.clientX - drag.sx;
+                var ny = drag.oy + e.clientY - drag.sy;
+                nx = Math.max(0, Math.min(window.innerWidth - card.offsetWidth, nx));
+                ny = Math.max(0, Math.min(window.innerHeight - card.offsetHeight, ny));
+                pop.style.right = 'auto';
+                pop.style.bottom = 'auto';
+                pop.style.left = nx + 'px';
+                pop.style.top = ny + 'px';
+                try { localStorage.setItem('music-pop-pos', JSON.stringify({ left: nx, top: ny })); } catch (err) {}
+              });
+
+              function endDrag(){
+                if (!drag.active) return;
+                drag.active = false;
+                card.style.cursor = '';
+              }
+              card.addEventListener('pointerup', endDrag);
+              card.addEventListener('pointercancel', endDrag);
+              card.addEventListener('pointerleave', endDrag);
+            })();
+
             // 右侧工具栏「🎵」按钮
             var wrap = document.getElementById('rightside-config-hide');
             if (wrap) {
