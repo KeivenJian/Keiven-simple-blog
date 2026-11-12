@@ -85,6 +85,19 @@
     background:transparent;color:var(--muted);font-size:13px;line-height:1;cursor:pointer;
     opacity:0;transition:.15s;
   }
+  /* 显示/隐藏按钮：用文字，不用眼睛图标 */
+  .item-btn.eye{width:auto;padding:0 7px;font-size:10px;letter-spacing:.5px;}
+  /* 分类分组 */
+  .group{margin-bottom:2px;}
+  .group-head{
+    display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:6px;
+    font-size:12px;color:var(--muted);cursor:pointer;user-select:none;
+  }
+  .group-head:hover{background:var(--panel-2);color:var(--text);}
+  .group-arrow{font-size:10px;transition:transform .2s;display:inline-block;}
+  .group-head.collapsed .group-arrow{transform:rotate(-90deg);}
+  .group-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .group-count{font-size:10px;opacity:.6;}
   .item:hover .item-btn{opacity:1;}
   .item-btn:hover{background:rgba(255,255,255,.08);}
   .item-btn.del:hover{background:rgba(255,107,129,.15);color:var(--err);}
@@ -538,15 +551,55 @@ async function loadList() {
 
     metas.sort((a, b) => b.name.localeCompare(a.name));
     listEl.innerHTML = "";
-    metas.forEach(renderItem);
+    renderList(metas);
     applySearch();
   } catch (e) {
     listEl.innerHTML = `<div class="item">加载失败：${e.message}</div>`;
   }
 }
 
-// 渲染一个文章条目：标题 + 分类 + 隐藏/删除按钮
-function renderItem(m) {
+// 按分类分组渲染（分类标题可点击折叠）
+function renderList(metas) {
+  const listEl = $("list");
+  const groups = {};
+  metas.forEach((m) => {
+    const cat = m.category || "未分类";
+    (groups[cat] = groups[cat] || []).push(m);
+  });
+
+  Object.keys(groups)
+    .sort((a, b) => a.localeCompare(b))
+    .forEach((cat) => {
+      const group = document.createElement("div");
+      group.className = "group";
+
+      const head = document.createElement("div");
+      head.className = "group-head";
+      head.innerHTML =
+        '<span class="group-arrow">▾</span>' +
+        '<span class="group-name"></span>' +
+        '<span class="group-count"></span>';
+      head.querySelector(".group-name").textContent = cat;
+      head.querySelector(".group-count").textContent = groups[cat].length;
+
+      const body = document.createElement("div");
+      body.className = "group-items";
+      groups[cat].forEach((m) => renderItem(m, body));
+
+      // 点分类标题：折叠 / 展开
+      head.addEventListener("click", () => {
+        head.classList.toggle("collapsed");
+        body.style.display = head.classList.contains("collapsed") ? "none" : "";
+      });
+
+      group.appendChild(head);
+      group.appendChild(body);
+      listEl.appendChild(group);
+    });
+}
+
+// 渲染一个文章条目：标题 + 显示/隐藏 + 删除
+function renderItem(m, parent) {
   const div = document.createElement("div");
   div.className = "item" + (m.hide ? " hidden-post" : "");
   div.dataset.name = m.name;
@@ -558,18 +611,14 @@ function renderItem(m) {
   const nameEl = document.createElement("span");
   nameEl.className = "item-name";
   nameEl.textContent = m.name.replace(/\.md$/, "");
-  const catEl = document.createElement("span");
-  catEl.className = "item-cat";
-  catEl.textContent = m.category || "未分类";
   main.appendChild(nameEl);
-  main.appendChild(catEl);
 
-  // 眼睛按钮：切换隐藏 / 显示
+  // 显示 / 隐藏 按钮（文字按钮，不用眼睛图标）
   const eye = document.createElement("button");
   eye.type = "button";
   eye.className = "item-btn eye";
-  eye.textContent = m.hide ? "🙈" : "👁";
-  eye.title = m.hide ? "当前已隐藏，点击显示" : "点击隐藏（首页/归档不再显示）";
+  eye.textContent = m.hide ? "显示" : "隐藏";
+  eye.title = m.hide ? "点击恢复显示" : "点击隐藏（移出首页与归档）";
   eye.addEventListener("click", (e) => {
     e.stopPropagation();
     toggleHide(m.name, m.hide);
@@ -590,21 +639,28 @@ function renderItem(m) {
   div.appendChild(eye);
   div.appendChild(del);
   div.addEventListener("click", () => openPost(m.name));
-  $("list").appendChild(div);
+  parent.appendChild(div);
 }
 
 // 搜索 + 筛选：按关键词（标题/分类）和「全部/已发布/隐藏」过滤
 let currentFilter = "all";
 function applySearch() {
   const kw = ($("search-input").value || "").trim().toLowerCase();
-  document.querySelectorAll("#list .item").forEach((el) => {
-    const text = (el.dataset.name + " " + (el.dataset.category || "")).toLowerCase();
-    const isHidden = el.dataset.hidden === "1";
-    const matchKw = !kw || text.includes(kw);
-    const matchFilter =
-      currentFilter === "all" ||
-      (currentFilter === "hid" ? isHidden : !isHidden);
-    el.style.display = matchKw && matchFilter ? "" : "none";
+  // 逐个分类分组处理：组内没有可见文章时，连分类标题一起隐藏
+  document.querySelectorAll("#list .group").forEach((group) => {
+    let visible = 0;
+    group.querySelectorAll(".item").forEach((el) => {
+      const text = (el.dataset.name + " " + (el.dataset.category || "")).toLowerCase();
+      const isHidden = el.dataset.hidden === "1";
+      const matchKw = !kw || text.includes(kw);
+      const matchFilter =
+        currentFilter === "all" ||
+        (currentFilter === "hid" ? isHidden : !isHidden);
+      const show = matchKw && matchFilter;
+      el.style.display = show ? "" : "none";
+      if (show) visible++;
+    });
+    group.style.display = visible ? "" : "none";
   });
 }
 $("search-input").addEventListener("input", applySearch);

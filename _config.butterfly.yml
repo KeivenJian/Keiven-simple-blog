@@ -26,12 +26,12 @@ nav:
 # 顶部菜单
 # 格式：显示文字: 链接 || 图标类名
 # 图标来自 Font Awesome，例如 fas fa-home
+# 日志页 /log/ 默认不放在导航里，需要时可直接访问该地址
 menu:
   首页: / || fas fa-home
   归档: /archives/ || fas fa-archive
   分类: /categories/ || fas fa-folder-open
   标签: /tags/ || fas fa-tags
-  日志: /log/ || fas fa-book
   关于: /about/ || fas fa-user
 
 
